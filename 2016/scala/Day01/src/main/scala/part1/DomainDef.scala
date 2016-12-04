@@ -1,8 +1,9 @@
-/**
-  * This trait represents the layout of the 'game'
-  */
-trait GameDef {
+package part1
 
+/**
+  * This trait represents the problem domain
+  */
+trait DomainDef {
   /**
     * The case class `Pos` encodes positions in the cartesian plane.
     */

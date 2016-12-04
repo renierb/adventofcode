@@ -1,5 +1,6 @@
+package part1
 
-class Day01(instructions: Array[String]) extends GameDef {
+class Solver(instructions: Array[String]) extends DomainDef {
 
   def start = Santa(North, Pos(0, 0))
 
