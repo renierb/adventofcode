@@ -22,7 +22,7 @@ trait DomainDef {
   case object East extends Direction
   case object West extends Direction
 
-  case class Santa(direction: Direction, pos: Pos, history: Vector[Pos] = Vector(), hq: Option[Pos] = None) {
+  case class Santa(direction: Direction, pos: Pos, history: Set[Pos] = Set(), hq: Option[Pos] = None) {
 
     private def matchExplored = new PartialFunction[Pos, Pos] {
       def apply(p: Pos): Pos = p
@@ -39,7 +39,7 @@ trait DomainDef {
         if (hq.isEmpty)
           (explore.collectFirst(matchExplored), history ++ explore)
         else
-          (hq, history) //Vector.empty[Pos] no need to keep the history if hq is known
+          (hq, Set.empty[Pos]) // no need to keep the history if hq is known
 
       Santa(d, pos.dx(n), history1, hq1)
     }
@@ -54,7 +54,7 @@ trait DomainDef {
         if (hq.isEmpty)
           (explore.collectFirst(matchExplored), history ++ explore)
         else
-          (hq, history) //Vector.empty[Pos]
+          (hq, Set.empty[Pos])
 
       Santa(d, pos.dy(n), history1, hq1)
     }
