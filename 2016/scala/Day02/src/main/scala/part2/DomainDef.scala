@@ -1,6 +1,26 @@
-package part1
+package part2
 
 trait DomainDef {
+
+  import scala.collection.{IndexedSeq => $}
+  val keypad = $(
+    "---1---",
+    "--234--",
+    "-56789-",
+    "--ABC--",
+    "---D---"
+  )
+
+  val maxRow = keypad.length - 1
+  val maxCol = keypad(0).length - 1
+
+  lazy val keys: Map[Char, (Int, Int)] = keypad.zipWithIndex.flatMap {
+    case (keys, i) => {
+      keys.zipWithIndex.map {
+        case (key, j) => key -> (i, j)
+      }
+    }
+  }.toMap
 
   trait Move {
     def move(key: (Int, Int)): (Int, Int)
@@ -8,7 +28,7 @@ trait DomainDef {
   case object Up extends Move {
     override def move(key: (Int, Int)): (Int, Int) = {
       val (row, col) = key
-      if (row == 0)
+      if (row == 0 || keypad(row - 1)(col) == '-')
         (row, col)
       else
         (row - 1, col)
@@ -17,7 +37,7 @@ trait DomainDef {
   case object Down extends Move {
     override def move(key: (Int, Int)): (Int, Int) = {
       val (row, col) = key
-      if (row == 2)
+      if (row == maxRow || keypad(row + 1)(col) == '-')
         (row, col)
       else
         (row + 1, col)
@@ -26,7 +46,7 @@ trait DomainDef {
   case object Left extends Move {
     override def move(key: (Int, Int)): (Int, Int) = {
       val (row, col) = key
-      if (col == 0)
+      if (col == 0 || keypad(row)(col - 1) == '-')
         (row, col)
       else
         (row, col - 1)
@@ -35,30 +55,17 @@ trait DomainDef {
   case object Right extends Move {
     override def move(key: (Int, Int)): (Int, Int) = {
       val (row, col) = key
-      if (col == 2)
+      if (col == maxCol || keypad(row)(col + 1) == '-')
         (row, col)
       else
         (row, col + 1)
     }
   }
 
-  val keys = Map(
-    1 -> (0, 0), 2 -> (0, 1), 3 -> (0, 2),
-    4 -> (1, 0), 5 -> (1, 1), 6 -> (1, 2),
-    7 -> (2, 0), 8 -> (2, 1), 9 -> (2, 2)
-  )
+  case class CodeInterpreter(key: Char) {
 
-  import scala.collection.{IndexedSeq => $}
-  val keypad = $(
-    $(1, 2, 3),
-    $(4, 5, 6),
-    $(7, 8, 9)
-  )
-
-  case class CodeInterpreter(startKey: Int) {
-
-    def interpret(instructions: String): Int = {
-      val (row, col) = instructions.foldLeft(keys(startKey)) { (k, i) =>
+    def interpret(instructions: String): Char = {
+      val (row, col) = instructions.foldLeft(keys(key)) { (k, i) =>
         i match {
           case 'U' => Up.move(k)
           case 'D' => Down.move(k)
