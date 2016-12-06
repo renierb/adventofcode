@@ -5,7 +5,7 @@ class Solver(input: Seq[Array[Int]]) {
     val triangles =
       for {
         g <- input.grouped(3)
-        t <- g.flatMap(_.zipWithIndex).groupBy(_._1).map(_._2.map(_._2).toArray)
+        t <- g.flatMap(_.zipWithIndex).groupBy(_._2).map(_._2.map(_._1).toArray)
       } yield t
 
     triangles.count(t => isValidTriangle(t(0), t(1), t(2)))
