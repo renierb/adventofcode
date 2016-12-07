@@ -1,10 +1,13 @@
 import akka.actor.Actor
+import solution.Answer
 
 class Listener extends Actor {
   def receive = {
-    case password: String =>
-      println("\n\tPassword: \t\t%s\n\tCalculation time: \t%s"
-        .format(password, 0))
-      context.system.terminate()
+    case Answer(password, duration, stop) =>
+      println("\n\tPassword: \t\t%s\n\tCalculation time: \t%s".format(password, duration))
+
+      if (stop) {
+        context.system.terminate()
+      }
   }
 }

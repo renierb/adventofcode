@@ -12,7 +12,7 @@ class Worker(doorID: String) extends Actor {
 
   def receive: Receive = {
     case Work(from, until) =>
-      println(s"Receive request: $from until $until")
+      //println(s"Receive request: $from until $until")
       val answers = solve(from, until)
       sender ! Result(answers)
   }
