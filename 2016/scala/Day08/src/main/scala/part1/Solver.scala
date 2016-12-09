@@ -2,18 +2,20 @@ package part1
 
 class Solver(input: Stream[Array[String]], override val width: Int = 50, override val height: Int = 6) extends DomainDef {
 
-  val screen = Array.fill[Pixel](height, width)(Pixel(-1, -1))
-  val indexes = for {
-    row <- 0 until height
-    col <- 0 until width
-  } yield (row, col)
+  private val screen = Array.fill[Pixel](height, width)(Pixel(-1, -1))
+
+  private val indexes =
+    for {
+      row <- 0 until height
+      col <- 0 until width
+    } yield (row, col)
 
   indexes.foreach { case (r, c) =>
     screen(r)(c) = Pixel(r, c)
   }
 
-  def solve: Int = {
-    val lastScreen = input.foldLeft(screen) { case (s, i) =>
+  def solve: Screen = {
+    input.foldLeft(screen) { case (s, i) =>
       i(0) match {
         case "rect" =>
           val dim = i(1).split('x').map(_.toInt)
@@ -31,6 +33,9 @@ class Solver(input: Stream[Array[String]], override val width: Int = 50, overrid
           }
       }
     }
-    lastScreen.flatten.count(_.on)
+  }
+
+  def pixels(screen: Screen): Int = {
+    screen.flatten.count(_.on)
   }
 }

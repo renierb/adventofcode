@@ -10,7 +10,7 @@ class Part1UnitTests extends FunSuite {
       Array("rotate", "column", "x=1", "by", "1")
     ), 7, 3)
 
-    val actual = solver.solve
-    assertResult(6)(actual)
+    val screen = solver.solve
+    assertResult(6)(solver.pixels(screen))
   }
 }

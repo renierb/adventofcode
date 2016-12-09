@@ -3,9 +3,12 @@ object Main extends App {
   val input = io.Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("input.txt")).getLines
   val instructions = input.map(_.split(' ')).toStream
 
-  val answer1 = new part1.Solver(instructions).solve
-  println(s"Part1: Pixels lit $answer1")
+  val solver = new part2.Solver(instructions)
+  val screen = solver.solve
 
-  //val answer2 = new part2.Solver(input).solve()
-  //println(s"Part1: Code is ${answer2.mkString}")
+  // part 1
+  println(s"Pixels lit: ${solver.pixels(screen)}")
+
+  // part 2
+  println(solver.printScreen(screen))
 }

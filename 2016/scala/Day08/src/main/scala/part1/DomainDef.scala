@@ -1,7 +1,5 @@
 package part1
 
-import scala.collection.mutable.ArrayBuffer
-
 trait DomainDef {
 
   val width: Int = 50
@@ -28,7 +26,7 @@ trait DomainDef {
       screen.map { row =>
         row.map { p =>
           if (p.y % height == y)
-            p.copy(y = p.y + by)
+            p.copy(x = p.x + by)
           else
             p
         }
