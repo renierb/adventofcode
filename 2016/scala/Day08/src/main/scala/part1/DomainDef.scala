@@ -6,7 +6,6 @@ trait DomainDef {
   val height: Int = 6
 
   case class Pixel(y: Int, x: Int, on: Boolean = false)
-  case object Empty extends Pixel(-1, -1)
 
   type Screen = Array[Pixel]
 
