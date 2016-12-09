@@ -6,7 +6,7 @@ class Solver(input: Stream[Array[String]], override val width: Int = 50, overrid
   extends part1.Solver(input, width, height) {
 
   def printScreen(screen: Screen): String = {
-    val rows = screen.flatten.groupBy(_.y % height).toSeq
+    val rows = screen.groupBy(_.y % height).toSeq
 
     val lines: Iterable[String] = SortedMap(rows: _*)
       .map {

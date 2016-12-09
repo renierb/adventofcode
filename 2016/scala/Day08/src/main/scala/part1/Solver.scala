@@ -2,7 +2,7 @@ package part1
 
 class Solver(input: Stream[Array[String]], override val width: Int = 50, override val height: Int = 6) extends DomainDef {
 
-  private val screen = Array.fill[Pixel](height, width)(Pixel(-1, -1))
+  private val screen = Array.fill[Pixel](height * width)(Empty)
 
   private val indexes =
     for {
@@ -11,7 +11,7 @@ class Solver(input: Stream[Array[String]], override val width: Int = 50, overrid
     } yield (row, col)
 
   indexes.foreach { case (r, c) =>
-    screen(r)(c) = Pixel(r, c)
+    screen(r * width + c) = Pixel(r, c)
   }
 
   def solve: Screen = {
@@ -36,6 +36,6 @@ class Solver(input: Stream[Array[String]], override val width: Int = 50, overrid
   }
 
   def pixels(screen: Screen): Int = {
-    screen.flatten.count(_.on)
+    screen.count(_.on)
   }
 }
