@@ -4,18 +4,25 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 sealed trait Item {
   val Id: String
+  val isGenerator: Boolean
+  val isMicrochip: Boolean
 }
 case class Generator(name: String) extends Item {
   lazy val Id: String = s"${name(0)}G".toUpperCase
   override def toString: String = Id
+
+  val isGenerator: Boolean = true
+  val isMicrochip: Boolean = false
 }
 case class Microchip(generator: String) extends Item {
   lazy val Id: String = s"${generator(0)}M".toUpperCase
   override def toString: String = Id
+
+  val isGenerator: Boolean = false
+  val isMicrochip: Boolean = true
 }
 
 case class Floor(nr: Int, items: List[Item])
-case class Elevator(items: List[Item])
 
 case object InputParser extends JavaTokenParsers {
 
