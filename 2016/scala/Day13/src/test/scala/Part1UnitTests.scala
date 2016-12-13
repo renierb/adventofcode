@@ -10,7 +10,7 @@ class Part1UnitTests extends FunSuite {
       val goal = Pos(7, 4)
     }
 
-    val paths = InfiniteLevel.solution
-    assertResult(11)(paths.length)
+    val steps = InfiniteLevel.solution
+    assertResult(11)(steps.length)
   }
 }
