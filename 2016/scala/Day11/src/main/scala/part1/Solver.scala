@@ -1,5 +1,7 @@
 package part1
 
+import scala.annotation.tailrec
+
 trait Solver extends DomainDef {
 
   val startState: Elevator
@@ -13,24 +15,34 @@ trait Solver extends DomainDef {
     for ((elevator, moveList) <- adjacent if !explored.contains(elevator)) yield (elevator, moveList)
   }
 
-  def from(initial: Stream[(Elevator, List[Move])],
-           explored: Set[Elevator]): Stream[(Elevator, List[Move])] = initial match {
-    case Stream.Empty => Stream.empty
+  @tailrec
+  private def from(initial: Stream[(Elevator, List[Move])],
+                   results: Stream[(Elevator, List[Move])],
+                   explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
+    if (initial.isEmpty) {
+      results
+    } else {
+      initial match {
+        case Stream.Empty => Stream.empty
 
-    case (elevator, moveList) #:: tail =>
-      val newExplored = explored + elevator
-      val newNeighbors = newFloorsOnly(floorsWithHistory(elevator, moveList), newExplored)
+        case (elevator, moveList) #:: tail =>
+          val newExplored = explored + elevator
+          val nextFloors = newFloorsOnly(floorsWithHistory(elevator, moveList), newExplored)
 
-      newNeighbors ++ from(tail ++ newNeighbors, newExplored)
+          from(tail ++ nextFloors, results #::: nextFloors, newExplored)
+      }
+    }
   }
 
   lazy val tripsFromStart: Stream[(Elevator, List[Move])] =
-    from((startState, List[Move]()) #:: Stream[(Elevator, List[Move])](), Set())
+    from(Stream((startState, List[Move]())), Stream(), Set())
 
   lazy val tripsToGoal: Stream[(Elevator, List[Move])] = {
-    tripsFromStart.filter {
-      case (e, _) => e.floor == 3 && (0 to 2).forall(e.items(_).isEmpty)
-    }
+    tripsFromStart.filter(e => isGoal(e._1))
+  }
+
+  private def isGoal(e: Elevator) = {
+    e.floor == 3 && (0 to 2).forall(e.items(_).isEmpty)
   }
 
   lazy val solution: List[Move] = tripsToGoal match {
