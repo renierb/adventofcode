@@ -1,4 +1,4 @@
-package solution
+package part1
 
 import scala.concurrent.duration.Duration
 

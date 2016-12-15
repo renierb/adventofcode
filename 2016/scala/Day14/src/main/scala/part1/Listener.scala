@@ -1,5 +1,6 @@
+package part1
+
 import akka.actor.Actor
-import solution.Answer
 
 class Listener extends Actor {
   def receive = {

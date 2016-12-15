@@ -1,17 +1,16 @@
-package solution.part1
+package part1
 
 import akka.actor._
 import akka.routing.RoundRobinPool
 
 import scala.concurrent.duration._
-import solution._
 
 import scala.collection.mutable
 import scala.reflect._
 
 class Solver[T <: Actor :ClassTag](factory: () => T, nrOfWorkers: Int, nrOfIterations: Int, listener: ActorRef) extends Actor {
 
-  private var router = context.actorOf(RoundRobinPool(nrOfWorkers).props(Props(factory())), "router")
+  private val router = context.actorOf(RoundRobinPool(nrOfWorkers).props(Props(factory())), "router")
   private val start: Long = System.currentTimeMillis
 
   private var nrOfAnswers: Int = _
@@ -31,7 +30,6 @@ class Solver[T <: Actor :ClassTag](factory: () => T, nrOfWorkers: Int, nrOfItera
         answers += (index -> None)
         router ! FindFullHouse(value.get, index, until)
       } else {
-        answers -= index
         self ! Calculate
       }
 
@@ -44,7 +42,7 @@ class Solver[T <: Actor :ClassTag](factory: () => T, nrOfWorkers: Int, nrOfItera
         val sorted = answers.toList.sortBy(_._1).take(64)
         nrOfAnswers = sorted.count(_._2.isDefined)
         if (nrOfAnswers >= 64) {
-          val answer = sorted.last._2.get.index
+          val answer = sorted.last._1
           listener ! Answer(answer, duration = (System.currentTimeMillis - start).millis)
           context.stop(self) // Stops this actor and all its supervised children
         } else {
