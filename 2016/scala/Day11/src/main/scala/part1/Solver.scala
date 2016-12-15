@@ -15,21 +15,32 @@ trait Solver extends DomainDef {
     for ((elevator, moveList) <- adjacent if !explored.contains(elevator)) yield (elevator, moveList)
   }
 
+  def betterFloorsOnly(adjacent: Stream[(Elevator, List[Move])],
+                       explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
+    for {
+      (elevator, moveList) <- adjacent
+      if !explored.contains(elevator) && explored.forall(elevator.fitness >= _.fitness)
+    } yield (elevator, moveList)
+  }
+
   @tailrec
   private def from(initial: Stream[(Elevator, List[Move])],
                    results: Stream[(Elevator, List[Move])],
                    explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
     if (initial.isEmpty) {
-      results
+      from(results, Stream(), explored)
     } else {
       initial match {
         case Stream.Empty => Stream.empty
 
         case (elevator, moveList) #:: tail =>
           val newExplored = explored + elevator
-          val nextFloors = newFloorsOnly(floorsWithHistory(elevator, moveList), newExplored)
-
-          from(tail ++ nextFloors, results #::: nextFloors, newExplored)
+          val newFloors = newFloorsOnly(floorsWithHistory(elevator, moveList), newExplored)
+          if (newFloors.exists(e => isGoal(e._1))) {
+            newFloors
+          } else {
+            from(tail, newFloors #::: results, newExplored)
+          }
       }
     }
   }
