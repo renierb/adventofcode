@@ -8,6 +8,12 @@ trait DomainDef {
 
   case class Elevator(floor: Int, items: Array[Set[Item]]) {
 
+    def fitness: Int = {
+      items.indices.foldLeft(0) { (fit, i) =>
+        fit + (i * items(i).size)
+      }
+    }
+
     def up: List[(Elevator, Move)] =
       if (floor < 3)
         moveItems(floor + 1, Up)
@@ -15,14 +21,18 @@ trait DomainDef {
         List()
 
     def down: List[(Elevator, Move)] =
-      if (floor > 0)
-        moveItems(floor - 1, Down)
+      if (floor > 0) {
+        if (!(0 until floor).forall(items(_).isEmpty))
+          moveItems(floor - 1, Down)
+        else
+          List()
+      }
       else
         List()
 
     private def moveItems(toFloor: Int, move: Move): List[(Elevator, Move)] = {
       (for {
-        i <- 1 to 2
+        i <- 2 to 1 by -1
         xs <- items(floor).subsets(i)
         newItems = items
           .updated(toFloor, items(toFloor) ++ xs)
