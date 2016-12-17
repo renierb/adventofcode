@@ -15,42 +15,27 @@ trait Solver extends DomainDef {
     for ((elevator, moveList) <- adjacent if !explored.contains(elevator)) yield (elevator, moveList)
   }
 
-  def betterFloorsOnly(adjacent: Stream[(Elevator, List[Move])],
-                       explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
-    for {
-      (elevator, moveList) <- adjacent
-      if !explored.contains(elevator) && explored.forall(elevator.fitness >= _.fitness)
-    } yield (elevator, moveList)
-  }
-
   @tailrec
   private def from(initial: Stream[(Elevator, List[Move])],
-                   results: Stream[(Elevator, List[Move])],
+                   movement: Stream[(Elevator, List[Move])],
                    explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
-    if (initial.isEmpty) {
-      from(results, Stream(), explored)
-    } else {
-      initial match {
-        case Stream.Empty => Stream.empty
+    initial match {
+      case Stream.Empty => movement
 
-        case (elevator, moveList) #:: tail =>
-          val newExplored = explored + elevator
-          val newFloors = newFloorsOnly(floorsWithHistory(elevator, moveList), newExplored)
-          if (newFloors.exists(e => isGoal(e._1))) {
-            newFloors
-          } else {
-            from(tail, newFloors #::: results, newExplored)
-          }
-      }
+      case (elevator, moveList) #:: tail =>
+        val moreExplored = explored + elevator
+        val moreMovement = newFloorsOnly(floorsWithHistory(elevator, moveList), moreExplored)
+        from(tail ++ moreMovement, moreMovement #::: movement, moreExplored)
     }
   }
 
   lazy val tripsFromStart: Stream[(Elevator, List[Move])] =
     from(Stream((startState, List[Move]())), Stream(), Set())
 
-  lazy val tripsToGoal: Stream[(Elevator, List[Move])] = {
-    tripsFromStart.filter(e => isGoal(e._1))
-  }
+  lazy val tripsToGoal: Stream[(Elevator, List[Move])] =
+    tripsFromStart.filter {
+      case (e, _) => isGoal(e)
+    }
 
   private def isGoal(e: Elevator) = {
     e.floor == 3 && (0 to 2).forall(e.items(_).isEmpty)

@@ -1,8 +1,8 @@
 import org.scalatest._
-import part1.InputParser
+import part1._
 
 class Part1UnitTests extends FunSuite {
-  test("part 1") {
+  test("part 1: example") {
     val input =
       """
         |The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
@@ -13,10 +13,123 @@ class Part1UnitTests extends FunSuite {
 
     object Part1 extends part1.Solver {
       val floors = InputParser(input)
-      override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet).toArray)
+      override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet))
     }
 
     val actual = Part1.solution.length
     assertResult(11)(actual)
+  }
+
+  test("part 1: start state is legal") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(Microchip("hydrogen"), Microchip("lithium")),
+        Set(Generator("hydrogen")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(impl.elevator.isLegal)
+  }
+
+  test("part 1: illegal state when pairing HG with LM") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(Microchip("hydrogen")),
+        Set(Generator("hydrogen"), Microchip("lithium")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(!impl.elevator.isLegal)
+  }
+
+  test("part 1: legal state when pairing HG+HM with LG") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(Microchip("lithium")),
+        Set(),
+        Set(Generator("lithium"), Generator("hydrogen"), Microchip("hydrogen")),
+        Set()
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(impl.elevator.isLegal)
+  }
+
+  test("part 1: legal state when pairing HG+LG and HM+LM") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(),
+        Set(Microchip("lithium"), Microchip("hydrogen")),
+        Set(Generator("lithium"), Generator("hydrogen")),
+        Set()
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(impl.elevator.isLegal)
+  }
+
+  test("part 1: illegal state when pairing HG+HM with LM") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(),
+        Set(Generator("hydrogen"), Microchip("hydrogen"), Microchip("lithium")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(!impl.elevator.isLegal)
+  }
+
+  test("part 1: legal state when all items on top floor") {
+    val impl = new DomainDef {
+      private val floors = List[Set[Item]](
+        Set(),
+        Set(),
+        Set(),
+        Set(Generator("lithium"), Generator("hydrogen"), Microchip("lithium"), Microchip("hydrogen"))
+      )
+      val elevator = Elevator(0, floors)
+    }
+
+    assert(impl.elevator.isLegal)
+  }
+
+  test("part 1: elevators are the same") {
+    val impl = new DomainDef {
+      val floors1: Floors = List[Set[Item]](
+        Set(Microchip("hydrogen"), Microchip("lithium")),
+        Set(Generator("hydrogen")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val floors2: Floors = List[Set[Item]](
+        Set(Microchip("hydrogen"), Microchip("lithium")),
+        Set(Generator("hydrogen")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val floors3: Floors = List[Set[Item]](
+        Set(Generator("hydrogen")),
+        Set(Microchip("hydrogen"), Microchip("lithium")),
+        Set(Generator("lithium")),
+        Set()
+      )
+      val elevator1 = Elevator(0, floors1)
+      val elevator2 = Elevator(0, floors2)
+    }
+
+    assert(impl.floors1 == impl.floors2)
+    assert(impl.floors1 != impl.floors3)
+    assert(impl.elevator1 == impl.elevator2)
   }
 }
