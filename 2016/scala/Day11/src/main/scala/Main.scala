@@ -5,7 +5,7 @@ object Main extends App {
 
   object Part1 extends part1.Solver {
     val floors = InputParser(input)
-    override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet).toArray)
+    override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet))
   }
 
   val answer1 = Part1.solution
