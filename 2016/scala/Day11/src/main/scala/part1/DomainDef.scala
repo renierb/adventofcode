@@ -8,6 +8,10 @@ trait DomainDef {
   case object Up extends Move
   case object Down extends Move
 
+  def isGoal(e: Elevator): Boolean = {
+    e.floor == 3 && (0 to 2).forall(e.items(_).isEmpty)
+  }
+
   case class Elevator(floor: Int, items: Floors) {
 
     def up: List[(Elevator, Move)] =
@@ -18,10 +22,10 @@ trait DomainDef {
 
     def down: List[(Elevator, Move)] =
       if (floor > 0) {
-        //if (!(0 until floor).forall(items(_).isEmpty))
+        if (!(0 until floor).forall(items(_).isEmpty))
           moveItems(floor - 1, Down)
-        //else
-        //  List()
+        else
+          List()
       }
       else
         List()
@@ -36,7 +40,8 @@ trait DomainDef {
       } yield (Elevator(toFloor, newItems), move)).toList
     }
 
-    private def adjacentFloors: List[(Elevator, Move)] = up ::: down
+    private def adjacentFloors: List[(Elevator, Move)] =
+      if (isGoal(this)) List() else up ::: down
 
     def legalFloors: List[(Elevator, Move)] =
       for (floor <- adjacentFloors if floor._1.isLegal) yield floor
