@@ -2,66 +2,76 @@ package part1
 
 trait DomainDef {
 
-  type Floors = List[Set[Item]]
+  type Floors = Vector[Set[Item]]
+  type Moves = List[Move]
 
   sealed abstract class Move
   case object Up extends Move
   case object Down extends Move
 
   def isGoal(e: Elevator): Boolean = {
-    e.floor == 3 && (0 to 2).forall(e.items(_).isEmpty)
+    e.floor == 3 && (0 to 2).forall(e.floors(_).isEmpty)
   }
 
-  case class Elevator(floor: Int, items: Floors) {
+  private val noMovement = List[(Elevator, Move)]()
+
+  case class Elevator(floor: Int, floors: Floors) {
 
     def up: List[(Elevator, Move)] =
       if (floor < 3)
         moveItems(floor + 1, Up)
       else
-        List()
+        noMovement
 
     def down: List[(Elevator, Move)] =
       if (floor > 0) {
-        if (!(0 until floor).forall(items(_).isEmpty))
+        if (!(0 until floor).forall(floors(_).isEmpty))
           moveItems(floor - 1, Down)
         else
-          List()
+          noMovement
       }
       else
-        List()
+        noMovement
 
     private def moveItems(toFloor: Int, move: Move): List[(Elevator, Move)] = {
+      val maxItems = if (move == Up) 2 else 1
       (for {
-        i <- 2 to 1 by -1
-        xs <- items(floor).subsets(i)
-        newItems = items
-          .updated(toFloor, items(toFloor) ++ xs)
-          .updated(floor, items(floor).diff(xs))
+        i <- maxItems to 1 by -1
+        xs <- floors(floor).subsets(i)
+        if move == Up || (move == Down && xs.forall(_.isMicrochip))
+        newItems = floors
+          .updated(toFloor, floors(toFloor) ++ xs)
+          .updated(floor, floors(floor).diff(xs))
       } yield (Elevator(toFloor, newItems), move)).toList
     }
 
     private def adjacentFloors: List[(Elevator, Move)] =
-      if (isGoal(this)) List() else up ::: down
+      if (isGoal(this))
+        noMovement // do not move if all items are on the top floor!
+      else
+        up ++ down
 
     def legalFloors: List[(Elevator, Move)] =
       for (floor <- adjacentFloors if floor._1.isLegal) yield floor
 
-    def isLegal: Boolean = items.forall { floor =>
-      floor.forall { item =>
-        if (item.isMicrochip)
-          floor.exists(hasGenerator(item)) || !floor.exists(_.isGenerator)
-        else
-          floor.groupBy(_.Id(0)).forall {
-            case (_, xs: Set[Item]) =>
-              if (xs.size == 1)
-                xs.head.isGenerator
-              else
-                true // Microchip is paired with its Generator
-          }
+    def isLegal: Boolean =
+      floors(floor).nonEmpty &&
+      floors.forall { floor =>
+        floor.forall { item =>
+          if (item.isMicrochip)
+            floor.exists(hasGenerator(item)) || !floor.exists(_.isGenerator)
+          else
+            floor.groupBy(_.name).forall {
+              case (_, xs: Set[Item]) =>
+                if (xs.size == 1)
+                  xs.head.isGenerator
+                else
+                  true // Microchip is paired with its Generator
+            }
+        }
       }
-    }
 
     def hasGenerator(item: Item)(other: Item): Boolean =
-      other.isGenerator && other.Id(0) == item.Id(0)
+      other.isGenerator && other.name == item.name
   }
 }

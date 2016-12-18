@@ -3,20 +3,18 @@ package part1
 import scala.util.parsing.combinator.JavaTokenParsers
 
 sealed trait Item {
-  val Id: String
+  val name: Char
   val isGenerator: Boolean
   val isMicrochip: Boolean
 }
-case class Generator(name: String) extends Item {
-  lazy val Id: String = s"${name(0)}G".toUpperCase
-  override def toString: String = Id
+case class Generator(name: Char) extends Item {
+  override def toString: String = s"${name}G"
 
   val isGenerator: Boolean = true
   val isMicrochip: Boolean = false
 }
-case class Microchip(generator: String) extends Item {
-  lazy val Id: String = s"${generator(0)}M".toUpperCase
-  override def toString: String = Id
+case class Microchip(name: Char) extends Item {
+  override def toString: String = s"${name}M"
 
   val isGenerator: Boolean = false
   val isMicrochip: Boolean = true
@@ -54,8 +52,8 @@ case object InputParser extends JavaTokenParsers {
     generator | microchip
 
   private def generator: Parser[Generator] =
-    "a" ~ ident ~ "generator" ^^ { case _ ~ name ~ _ => Generator(name) }
+    "a" ~ ident ~ "generator" ^^ { case _ ~ name ~ _ => Generator(name.charAt(0).toUpper) }
 
   private def microchip: Parser[Microchip] =
-    "a" ~ ident ~ "-compatible microchip" ^^ { case _ ~ name ~ _ => Microchip(name) }
+    "a" ~ ident ~ "-compatible microchip" ^^ { case _ ~ name ~ _ => Microchip(name.charAt(0).toUpper) }
 }

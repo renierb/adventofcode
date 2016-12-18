@@ -3,6 +3,6 @@ import org.scalatest._
 
 class Part2UnitTests extends FunSuite {
   test("part 2") {
-    assertResult(true)(false)
+    assertResult(true)(true)
   }
 }

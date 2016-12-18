@@ -30,15 +30,17 @@ trait Solver extends DomainDef {
   }
 
   lazy val tripsFromStart: Stream[(Elevator, List[Move])] =
-    from(Stream((startState, List[Move]())), Set())
+    from((startState, List[Move]()) #:: Stream[(Elevator, List[Move])](), Set())
 
-  lazy val tripsToGoal: Stream[(Elevator, List[Move])] =
-    tripsFromStart.filter {
-      case (e, _) => isGoal(e)
-    }
+  lazy val tripsToGoal: Option[(Elevator, List[Move])] =
+    tripsFromStart.collectFirst({
+      case (e: Elevator, moves: Moves) if isGoal(e) => (e, moves)
+    })
 
   lazy val solution: List[Move] = tripsToGoal match {
-    case Stream.Empty => Nil
-    case (_, moveList) #:: _ => moveList
+    case None =>
+      List()
+    case Some((_, moves)) =>
+      moves
   }
 }

@@ -13,7 +13,7 @@ class Part1UnitTests extends FunSuite {
 
     object Part1 extends part1.Solver {
       val floors = InputParser(input)
-      override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet))
+      override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet).toVector)
     }
 
     val actual = Part1.solution.length
@@ -23,12 +23,12 @@ class Part1UnitTests extends FunSuite {
   test("part 1: start state is legal") {
     val impl = new DomainDef {
       private val floors = List[Set[Item]](
-        Set(Microchip("hydrogen"), Microchip("lithium")),
-        Set(Generator("hydrogen")),
-        Set(Generator("lithium")),
+        Set(Microchip('H'), Microchip('L')),
+        Set(Generator('H')),
+        Set(Generator('L')),
         Set()
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(0, floors.toVector)
     }
 
     assert(impl.elevator.isLegal)
@@ -37,12 +37,12 @@ class Part1UnitTests extends FunSuite {
   test("part 1: illegal state when pairing HG with LM") {
     val impl = new DomainDef {
       private val floors = List[Set[Item]](
-        Set(Microchip("hydrogen")),
-        Set(Generator("hydrogen"), Microchip("lithium")),
-        Set(Generator("lithium")),
+        Set(Microchip('H')),
+        Set(Generator('H'), Microchip('L')),
+        Set(Generator('L')),
         Set()
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(0, floors.toVector)
     }
 
     assert(!impl.elevator.isLegal)
@@ -51,12 +51,12 @@ class Part1UnitTests extends FunSuite {
   test("part 1: legal state when pairing HG+HM with LG") {
     val impl = new DomainDef {
       private val floors = List[Set[Item]](
-        Set(Microchip("lithium")),
+        Set(Microchip('L')),
         Set(),
-        Set(Generator("lithium"), Generator("hydrogen"), Microchip("hydrogen")),
+        Set(Generator('L'), Generator('H'), Microchip('H')),
         Set()
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(0, floors.toVector)
     }
 
     assert(impl.elevator.isLegal)
@@ -66,11 +66,11 @@ class Part1UnitTests extends FunSuite {
     val impl = new DomainDef {
       private val floors = List[Set[Item]](
         Set(),
-        Set(Microchip("lithium"), Microchip("hydrogen")),
-        Set(Generator("lithium"), Generator("hydrogen")),
+        Set(Microchip('L'), Microchip('H')),
+        Set(Generator('L'), Generator('H')),
         Set()
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(1, floors.toVector)
     }
 
     assert(impl.elevator.isLegal)
@@ -80,11 +80,11 @@ class Part1UnitTests extends FunSuite {
     val impl = new DomainDef {
       private val floors = List[Set[Item]](
         Set(),
-        Set(Generator("hydrogen"), Microchip("hydrogen"), Microchip("lithium")),
-        Set(Generator("lithium")),
+        Set(Generator('H'), Microchip('H'), Microchip('L')),
+        Set(Generator('L')),
         Set()
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(0, floors.toVector)
     }
 
     assert(!impl.elevator.isLegal)
@@ -96,9 +96,9 @@ class Part1UnitTests extends FunSuite {
         Set(),
         Set(),
         Set(),
-        Set(Generator("lithium"), Generator("hydrogen"), Microchip("lithium"), Microchip("hydrogen"))
+        Set(Generator('L'), Generator('H'), Microchip('L'), Microchip('H'))
       )
-      val elevator = Elevator(0, floors)
+      val elevator = Elevator(3, floors.toVector)
     }
 
     assert(impl.elevator.isLegal)
@@ -106,22 +106,22 @@ class Part1UnitTests extends FunSuite {
 
   test("part 1: elevators are the same") {
     val impl = new DomainDef {
-      val floors1: Floors = List[Set[Item]](
-        Set(Microchip("hydrogen"), Microchip("lithium")),
-        Set(Generator("hydrogen")),
-        Set(Generator("lithium")),
+      val floors1: Floors = Vector[Set[Item]](
+        Set(Microchip('H'), Microchip('L')),
+        Set(Generator('H')),
+        Set(Generator('L')),
         Set()
       )
-      val floors2: Floors = List[Set[Item]](
-        Set(Microchip("hydrogen"), Microchip("lithium")),
-        Set(Generator("hydrogen")),
-        Set(Generator("lithium")),
+      val floors2: Floors = Vector[Set[Item]](
+        Set(Microchip('H'), Microchip('L')),
+        Set(Generator('H')),
+        Set(Generator('L')),
         Set()
       )
-      val floors3: Floors = List[Set[Item]](
-        Set(Generator("hydrogen")),
-        Set(Microchip("hydrogen"), Microchip("lithium")),
-        Set(Generator("lithium")),
+      val floors3: Floors = Vector[Set[Item]](
+        Set(Generator('H')),
+        Set(Microchip('H'), Microchip('L')),
+        Set(Generator('L')),
         Set()
       )
       val elevator1 = Elevator(0, floors1)
