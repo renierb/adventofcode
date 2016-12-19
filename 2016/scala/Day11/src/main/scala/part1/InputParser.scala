@@ -8,14 +8,10 @@ sealed trait Item {
   val isMicrochip: Boolean
 }
 case class Generator(name: Char) extends Item {
-  override def toString: String = s"${name}G"
-
   val isGenerator: Boolean = true
   val isMicrochip: Boolean = false
 }
 case class Microchip(name: Char) extends Item {
-  override def toString: String = s"${name}M"
-
   val isGenerator: Boolean = false
   val isMicrochip: Boolean = true
 }

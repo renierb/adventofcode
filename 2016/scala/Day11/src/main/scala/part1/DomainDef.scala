@@ -13,17 +13,21 @@ trait DomainDef {
     e.floor == 3 && (0 to 2).forall(e.floors(_).isEmpty)
   }
 
-  private val noMovement = List[(Elevator, Move)]()
+  private val noMovement = List[Elevator]()
 
   case class Elevator(floor: Int, floors: Floors) {
 
-    def up: List[(Elevator, Move)] =
+    lazy val score: Int = floors.zipWithIndex.foldLeft(0) {
+      case (c, (items, i)) => c + (i + 1) * items.size
+    }
+
+    def up: List[Elevator] =
       if (floor < 3)
         moveItems(floor + 1, Up)
       else
         noMovement
 
-    def down: List[(Elevator, Move)] =
+    def down: List[Elevator] =
       if (floor > 0) {
         if (!(0 until floor).forall(floors(_).isEmpty))
           moveItems(floor - 1, Down)
@@ -33,7 +37,7 @@ trait DomainDef {
       else
         noMovement
 
-    private def moveItems(toFloor: Int, move: Move): List[(Elevator, Move)] = {
+    private def moveItems(toFloor: Int, move: Move): List[Elevator] = {
       val maxItems = if (move == Up) 2 else 1
       (for {
         i <- maxItems to 1 by -1
@@ -42,17 +46,17 @@ trait DomainDef {
         newItems = floors
           .updated(toFloor, floors(toFloor) ++ xs)
           .updated(floor, floors(floor).diff(xs))
-      } yield (Elevator(toFloor, newItems), move)).toList
+      } yield Elevator(toFloor, newItems)).toList
     }
 
-    private def adjacentFloors: List[(Elevator, Move)] =
+    private def adjacentFloors: List[Elevator] =
       if (isGoal(this))
         noMovement // do not move if all items are on the top floor!
       else
         up ++ down
 
-    def legalFloors: List[(Elevator, Move)] =
-      for (floor <- adjacentFloors if floor._1.isLegal) yield floor
+    def legalFloors: List[Elevator] =
+      for (elevator <- adjacentFloors if elevator.isLegal) yield elevator
 
     def isLegal: Boolean =
       floors(floor).nonEmpty &&

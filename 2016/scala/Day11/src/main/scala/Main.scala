@@ -9,5 +9,5 @@ object Main extends App {
   }
 
   val answer1 = Part1.solution
-  println(s"Part1: ${answer1.length}")
+  println(s"Part1: $answer1")
 }

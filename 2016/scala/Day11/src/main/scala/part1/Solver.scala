@@ -4,17 +4,17 @@ trait Solver extends DomainDef {
 
   val startState: Elevator
 
-  def floorsWithHistory(e: Elevator, history: List[Move]): Stream[(Elevator, List[Move])] = {
-    for ((elevator, move) <- e.legalFloors.toStream) yield (elevator, move :: history)
+  def legalFloors(e: Elevator, moves: Int = 0): Stream[(Elevator, Int)] = {
+    (for (elevator <- e.legalFloors if moves < elevator.score / 1.5) yield (elevator, moves + 1)).toStream
   }
 
-  def newFloorsOnly(adjacent: Stream[(Elevator, List[Move])],
-                    explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
-    for ((elevator, moveList) <- adjacent if !explored.contains(elevator)) yield (elevator, moveList)
+  def newFloorsOnly(adjacent: Stream[(Elevator, Int)],
+                    explored: Set[Elevator]): Stream[(Elevator, Int)] = {
+    for (elevator <- adjacent if !explored.contains(elevator._1)) yield elevator
   }
 
-  private def from(initial: Stream[(Elevator, List[Move])],
-                   explored: Set[Elevator]): Stream[(Elevator, List[Move])] = {
+  private def from(initial: Stream[(Elevator, Int)],
+                   explored: Set[Elevator]): Stream[(Elevator, Int)] = {
     if (initial.isEmpty)
       Stream.empty
     else {
@@ -22,24 +22,24 @@ trait Solver extends DomainDef {
 
       val moreMovement = for {
         (elevator, moves) <- initial
-        move <- newFloorsOnly(floorsWithHistory(elevator, moves), moreExplored)
+        move <- newFloorsOnly(legalFloors(elevator, moves), moreExplored)
       } yield move
 
       moreMovement #::: from(moreMovement, moreExplored)
     }
   }
 
-  lazy val tripsFromStart: Stream[(Elevator, List[Move])] =
-    from((startState, List[Move]()) #:: Stream[(Elevator, List[Move])](), Set())
+  lazy val tripsFromStart: Stream[(Elevator, Int)] =
+    from((startState, 0) #:: Stream[(Elevator, Int)](), Set())
 
-  lazy val tripsToGoal: Option[(Elevator, List[Move])] =
+  lazy val tripsToGoal: Option[(Elevator, Int)] =
     tripsFromStart.collectFirst({
-      case (e: Elevator, moves: Moves) if isGoal(e) => (e, moves)
+      case (e: Elevator, moves: Int) if isGoal(e) => (e, moves)
     })
 
-  lazy val solution: List[Move] = tripsToGoal match {
+  lazy val solution: Int = tripsToGoal match {
     case None =>
-      List()
+      0
     case Some((_, moves)) =>
       moves
   }
