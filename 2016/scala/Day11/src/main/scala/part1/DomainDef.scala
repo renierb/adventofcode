@@ -17,10 +17,6 @@ trait DomainDef {
 
   case class Elevator(floor: Int, floors: Floors) {
 
-    lazy val score: Int = floors.zipWithIndex.foldLeft(0) {
-      case (c, (items, i)) => c + (i + 1) * items.size
-    }
-
     def up: List[Elevator] =
       if (floor < 3)
         moveItems(floor + 1, Up)
@@ -33,49 +29,53 @@ trait DomainDef {
           moveItems(floor - 1, Down)
         else
           noMovement
-      }
-      else
+      } else {
         noMovement
+      }
 
     private def moveItems(toFloor: Int, move: Move): List[Elevator] = {
-      val maxItems = if (move == Up) 2 else 1
+      def moveCargo(cargo: Set[Item]) = {
+        floors
+          .updated(toFloor, floors(toFloor) ++ cargo)
+          .updated(floor, floors(floor) -- cargo)
+      }
+
+      val items = floors(floor)
       (for {
-        i <- maxItems to 1 by -1
-        xs <- floors(floor).subsets(i)
-        if move == Up || (move == Down && xs.forall(_.isMicrochip))
-        newItems = floors
-          .updated(toFloor, floors(toFloor) ++ xs)
-          .updated(floor, floors(floor).diff(xs))
-      } yield Elevator(toFloor, newItems)).toList
+        cargo1 <- items
+        cargo2 <- items
+        if move == Up || (move == Down && cargo1 == cargo2) // Optimization: Move only one item when going Down
+      } yield Elevator(toFloor, moveCargo(Set(cargo1, cargo2)))).toList
     }
 
     private def adjacentFloors: List[Elevator] =
       if (isGoal(this))
-        noMovement // do not move if all items are on the top floor!
+        noMovement // Do not move if all items are on the top floor!
       else
         up ++ down
 
     def legalFloors: List[Elevator] =
-      for (elevator <- adjacentFloors if elevator.isLegal) yield elevator
+      for (floor <- adjacentFloors if floor.isLegal) yield floor
 
     def isLegal: Boolean =
       floors(floor).nonEmpty &&
       floors.forall { floor =>
-        floor.forall { item =>
-          if (item.isMicrochip)
-            floor.exists(hasGenerator(item)) || !floor.exists(_.isGenerator)
-          else
-            floor.groupBy(_.name).forall {
-              case (_, xs: Set[Item]) =>
-                if (xs.size == 1)
-                  xs.head.isGenerator
-                else
-                  true // Microchip is paired with its Generator
-            }
+        floor.forall {
+          case Microchip(isotope) =>
+            floor.exists(hasGenerator(isotope)) || !floor.exists(hasGenerator)
+          case _ =>
+            true
         }
       }
 
-    def hasGenerator(item: Item)(other: Item): Boolean =
-      other.isGenerator && other.name == item.name
+    def hasGenerator(isotope: Char)(other: Item): Boolean = other match {
+      case Generator(`isotope`) => true
+      case _ => false
+    }
+
+    def hasGenerator(other: Item): Boolean = other match {
+      case Generator(_) => true
+      case _ => false
+    }
   }
 }

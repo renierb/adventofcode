@@ -3,18 +3,10 @@ package part1
 import scala.util.parsing.combinator.JavaTokenParsers
 
 sealed trait Item {
-  val name: Char
-  val isGenerator: Boolean
-  val isMicrochip: Boolean
+  val isotope: Char
 }
-case class Generator(name: Char) extends Item {
-  val isGenerator: Boolean = true
-  val isMicrochip: Boolean = false
-}
-case class Microchip(name: Char) extends Item {
-  val isGenerator: Boolean = false
-  val isMicrochip: Boolean = true
-}
+case class Generator(isotope: Char) extends Item
+case class Microchip(isotope: Char) extends Item
 
 case class Floor(nr: Int, items: List[Item])
 

@@ -16,7 +16,7 @@ class Part1UnitTests extends FunSuite {
       override val startState = Elevator(0, floors.sortBy(_.nr).map(f => f.items.toSet).toVector)
     }
 
-    val actual = Part1.solution
+    val actual = Part1.solve
     assertResult(11)(actual)
   }
 
@@ -88,7 +88,6 @@ class Part1UnitTests extends FunSuite {
     }
 
     assert(!impl.elevator.isLegal)
-    assert(impl.elevator.score == 9)
   }
 
   test("part 1: legal state when all items on top floor") {
@@ -103,7 +102,6 @@ class Part1UnitTests extends FunSuite {
     }
 
     assert(impl.elevator.isLegal)
-    assert(impl.elevator.score == 16)
   }
 
   test("part 1: elevators are the same") {
