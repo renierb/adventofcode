@@ -1,43 +1,34 @@
 package part2
 
-import java.util
-
 import scala.annotation.tailrec
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParSet
 
 class Solver(total: Int) {
 
-  private val presents: ArrayBuffer[Int] = ArrayBuffer(ArrayBuffer.fill[Int](total)(1).indices.map(_ + 1): _*)
+  private val elves: ListBuffer[Int] = ListBuffer(ListBuffer.fill[Int](total)(0).indices.map(_ + 1): _*)
 
   def solve: Int = {
-    takePresents(0, total)
+    takePresents(0, elves.length)
   }
 
   @tailrec
-  final def takePresents(taker: Int, elves: Int = total): Int = {
-    require(elves >= 1)
-    if (elves == 1)
-      presents.filter(_ != 0).head
-    else if (presents(taker) == 0)
-      takePresents((taker + 1) % total, elves)
+  private def takePresents(index: Int, count: Int, removed: ParSet[Int] = ParSet()): Int = {
+    val taker = elves.head
+    if (elves.length == 1)
+      taker
     else {
-      var takee = takeeIndex(taker, elves / 2)
+      if (removed.contains(taker)) {
+        elves.remove(0)
+        takePresents(index - 1, count, removed - taker)
+      } else {
+        val takee = elves(index + (count / 2))
 
-      presents.update(takee, 0)
-      takePresents((taker + 1) % total, elves - 1)
-    }
-  }
+        elves.remove(0)
+        elves += taker
 
-  @tailrec
-  private def takeeIndex(from: Int, skip: Int): Int = {
-    if (presents(from) == 0)
-      takeeIndex((from + 1) % total, skip)
-    else {
-      if (skip == 0)
-        from
-      else
-        takeeIndex((from + 1) % total, skip - 1)
+        takePresents(index + 1, count - 1, removed + takee)
+      }
     }
   }
 }
