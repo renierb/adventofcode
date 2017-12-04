@@ -25,6 +25,8 @@ namespace Day03
             BottomRightOf(7, isSquare: 9);
             BottomRightOf(8, isSquare: 9);
             BottomRightOf(9, isSquare: 9);
+            BottomRightOf(10, isSquare: 25);
+            BottomRightOf(25, isSquare: 25);
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -77,11 +79,7 @@ namespace Day03
 
         private static int GetStepsTaken(int fromSquare)
         {
-            var spiralSize = GetSpiralSize(fromSquare);
-            var spiral = BuildSpiral(spiralSize);
-            var squarePosition = GetPosition(fromSquare, spiral);
-            var stepsFromPosition = GetStepsTaken(squarePosition, spiralSize);
-            return stepsFromPosition;
+            return GetStepsTaken(IterateSpiral((1, 2), fromSquare), GetSpiralSize(fromSquare));
         }
 
         private static int GetSpiralSize(int fromSquare)
@@ -89,126 +87,43 @@ namespace Day03
             return (int) Math.Sqrt(GetBottomRightSquare(fromSquare));
         }
 
+        private static (int, int) IterateSpiral((int row, int col) start, int value, int spiralSize = 3, int square = 1)
+        {
+            for (int row = start.row; row >= 0; row--)
+            {
+                if (++square == value)
+                    return (row, start.col);
+            }
+
+            for (int col = spiralSize - 2; col >= 0; col--)
+            {
+                if (++square == value)
+                    return (0, col);
+            }
+
+            for (int row = 1; row < spiralSize; row++)
+            {
+                if (++square == value)
+                    return (row, 0);
+            }
+
+            for (int col = 1; col < spiralSize; col++)
+            {
+                if (++square == value)
+                    return (spiralSize - 1, col);
+            }
+
+            // Move to next spiral ring
+            if (++square == value)
+                return (spiralSize, spiralSize + 1);
+
+            return IterateSpiral((spiralSize - 1, spiralSize + 1), value, spiralSize + 2, square);
+        }
+
         private static int GetStepsTaken((int row, int col) pos, int size)
         {
             (int midRow, int midCol) = (size / 2, size / 2);
             return Math.Abs(pos.row - midRow) + Math.Abs(pos.col - midCol);
-        }
-
-        private static (int, int) GetPosition(int fromSquare, int[][] spiral)
-        {
-            int len = spiral.Length;
-            var bottomRight = spiral[len - 1][len - 1];
-
-            var distance = (int) Math.Sqrt(bottomRight) - 1;
-            var bottomLeft = bottomRight - distance;
-            var topLeft = bottomLeft - distance;
-            var topRight = topLeft - distance;
-
-            if (fromSquare <= topRight)
-                return FindInColumn(fromSquare, spiral, len - 1);
-            if (fromSquare <= topLeft)
-                return FindInRow(fromSquare, spiral, 0);
-            if (fromSquare <= bottomLeft)
-                return FindInColumn(fromSquare, spiral, 0);
-            return FindInRow(fromSquare, spiral, len - 1);
-        }
-
-        private static (int, int) FindInRow(int fromSquare, int[][] spiral, int row)
-        {
-            for (int col = 0; col < spiral.Length; col++)
-            {
-                if (spiral[row][col] == fromSquare)
-                    return (row, col);
-            }
-            throw new Exception("Not found");
-        }
-
-        private static (int, int) FindInColumn(int fromSquare, int[][] spiral, int col)
-        {
-            for (int row = 0; row < spiral.Length; row++)
-            {
-                if (spiral[row][col] == fromSquare)
-                    return (row, col);
-            }
-            throw new Exception("Not found");
-        }
-
-        [Fact]
-        public void BuildSpiralTests()
-        {
-            Assert.Equal(
-                new[]
-                {
-                    new[] {5, 4, 3},
-                    new[] {6, 1, 2},
-                    new[] {7, 8, 9}
-                }, BuildSpiral(3));
-            Assert.Equal(
-                new[]
-                {
-                    new[] {17, 16, 15, 14, 13},
-                    new[] {18, 5, 4, 3, 12},
-                    new[] {19, 6, 1, 2, 11},
-                    new[] {20, 7, 8, 9, 10},
-                    new[] {21, 22, 23, 24, 25}
-                }, BuildSpiral(5));
-        }
-
-        private static int[][] BuildSpiral(int size)
-        {
-            int[][] spiral = new int[size][];
-            for (int i = 0; i < size; i++)
-            {
-                spiral[i] = new int[size];
-            }
-            spiral[size / 2][size / 2] = 1;
-            PopulateSpiral(spiral, size, size * size);
-            return spiral;
-        }
-
-        private static void PopulateSpiral(int[][] spiral, int size, int square, int i = 0)
-        {
-            if (size == 1)
-                return;
-            if (square == size * size)
-            {
-                int row = size - 1 + i;
-                for (int col = size - 1 + i; col >= i; col--)
-                {
-                    spiral[row][col] = square--;
-                }
-                PopulateSpiral(spiral, size, square, i);
-                return;
-            }
-            if (square == size * size - size)
-            {
-                int col = i;
-                for (int row = size - 2 + i; row >= i; row--)
-                {
-                    spiral[row][col] = square--;
-                }
-                PopulateSpiral(spiral, size, square, i);
-                return;
-            }
-            if (square == (size * size - (size * 2)) + 1)
-            {
-                int row = i;
-                for (int col = i + 1; col < size + i; col++)
-                {
-                    spiral[row][col] = square--;
-                }
-                PopulateSpiral(spiral, size, square, i);
-                return;
-            }
-            {
-                int col = size - 1 + i;
-                for (int row = i + 1; row < size - 1 + i; row++)
-                {
-                    spiral[row][col] = square--;
-                }
-                PopulateSpiral(spiral, size - 2, square, i + 1);
-            }
         }
 
         [Fact]
