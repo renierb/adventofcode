@@ -47,6 +47,7 @@ namespace Day03
                     return sum;
                 spiral[row][start.col] = sum;
             }
+
             for (int col = spiral.Count - 2; col >= 0; col--)
             {
                 var sum = SumNeighbors(spiral, (0, col));
@@ -54,6 +55,7 @@ namespace Day03
                     return sum;
                 spiral[0][col] = sum;
             }
+
             for (int row = 1; row < spiralSize; row++)
             {
                 var sum = SumNeighbors(spiral, (row, 0));
@@ -61,6 +63,7 @@ namespace Day03
                     return sum;
                 spiral[row][0] = sum;
             }
+
             for (int col = 1; col < spiralSize; col++)
             {
                 var sum = SumNeighbors(spiral, (spiralSize - 1, col));
@@ -68,6 +71,7 @@ namespace Day03
                     return sum;
                 spiral[spiralSize - 1][col] = sum;
             }
+
             return 0;
         }
 
@@ -96,16 +100,8 @@ namespace Day03
 
         private static bool IsLegal(List<List<int>> spiral, (int row, int col) pos)
         {
-            try
-            {
-                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-                spiral.ElementAt(pos.row).ElementAt(pos.col);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var maxIndex = spiral.Count - 1;
+            return pos.row >= 0 && pos.col >= 0 && pos.row <= maxIndex && pos.col <= maxIndex;
         }
 
         private static List<List<int>> GrowSpiral(List<List<int>> spiral)
