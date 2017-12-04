@@ -167,47 +167,47 @@ namespace Day03
             return spiral;
         }
 
-        private static void PopulateSpiral(int[][] spiral, int size, int corner, int i = 0)
+        private static void PopulateSpiral(int[][] spiral, int size, int square, int i = 0)
         {
             if (size == 1)
                 return;
-            if (corner == size * size)
+            if (square == size * size)
             {
                 int row = size - 1 + i;
                 for (int col = size - 1 + i; col >= i; col--)
                 {
-                    spiral[row][col] = corner--;
+                    spiral[row][col] = square--;
                 }
-                PopulateSpiral(spiral, size, corner, i);
+                PopulateSpiral(spiral, size, square, i);
                 return;
             }
-            if (corner == size * size - size)
+            if (square == size * size - size)
             {
                 int col = i;
                 for (int row = size - 2 + i; row >= i; row--)
                 {
-                    spiral[row][col] = corner--;
+                    spiral[row][col] = square--;
                 }
-                PopulateSpiral(spiral, size, corner, i);
+                PopulateSpiral(spiral, size, square, i);
                 return;
             }
-            if (corner == (size * size - (size * 2)) + 1)
+            if (square == (size * size - (size * 2)) + 1)
             {
                 int row = i;
                 for (int col = i + 1; col < size + i; col++)
                 {
-                    spiral[row][col] = corner--;
+                    spiral[row][col] = square--;
                 }
-                PopulateSpiral(spiral, size, corner, i);
+                PopulateSpiral(spiral, size, square, i);
                 return;
             }
             {
                 int col = size - 1 + i;
                 for (int row = i + 1; row < size - 1 + i; row++)
                 {
-                    spiral[row][col] = corner--;
+                    spiral[row][col] = square--;
                 }
-                PopulateSpiral(spiral, size - 2, corner, i + 1);
+                PopulateSpiral(spiral, size - 2, square, i + 1);
             }
         }
 
