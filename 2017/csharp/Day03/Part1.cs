@@ -79,7 +79,8 @@ namespace Day03
 
         private static int GetStepsTaken(int fromSquare)
         {
-            return GetStepsTaken(IterateSpiral((1, 2), fromSquare), GetSpiralSize(fromSquare));
+            var spiralSize = GetSpiralSize(fromSquare);
+            return GetStepsTaken(IterateSpiral(fromSquare, spiralSize), spiralSize);
         }
 
         private static int GetSpiralSize(int fromSquare)
@@ -87,37 +88,89 @@ namespace Day03
             return (int) Math.Sqrt(GetBottomRightSquare(fromSquare));
         }
 
-        private static (int, int) IterateSpiral((int row, int col) start, int value, int spiralSize = 3, int square = 1)
+        private static (int, int) IterateSpiral(int value, int spiralSize = 3)
         {
-            for (int row = start.row; row >= 0; row--)
+            if (IsRightSideNumber(value, spiralSize))
             {
-                if (++square == value)
-                    return (row, start.col);
+                return IterateRightSide(value, spiralSize);
             }
 
+            if (IsTopSideNumber(value, spiralSize))
+            {
+                return IterateTopSide(value, spiralSize);
+            }
+
+            if (IsLeftSideNumber(value, spiralSize))
+            {
+                return IterateLeftSide(value, spiralSize);
+            }
+
+            return IterateBottomSide(value, spiralSize);
+        }
+
+        private static bool IsRightSideNumber(int value, int spiralSize)
+        {
+            return value <= GetSquare(spiralSize, 3);
+        }
+
+        private static bool IsTopSideNumber(int value, int spiralSize)
+        {
+            return value <= GetSquare(spiralSize, 2);
+        }
+
+        private static bool IsLeftSideNumber(int value, int spiralSize)
+        {
+            return value <= GetSquare(spiralSize, 1);
+        }
+
+        private static (int row, int col) IterateRightSide(int value, int spiralSize)
+        {
+            int square = GetSquare(spiralSize, 4) + 1;
+            (int row, int col) pos = (spiralSize - 2, spiralSize - 1);
+            for (int row = pos.row; row >= 0; row--)
+            {
+                if (square++ == value)
+                    return (row, pos.col);
+            }
+            throw new Exception("Uh oh!");
+        }
+
+        private static (int, int) IterateTopSide(int value, int spiralSize)
+        {
+            int square = GetSquare(spiralSize, 3) + 1;
             for (int col = spiralSize - 2; col >= 0; col--)
             {
-                if (++square == value)
+                if (square++ == value)
                     return (0, col);
             }
+            throw new Exception("Uh oh!");
+        }
 
+        private static (int, int) IterateLeftSide(int value, int spiralSize)
+        {
+            int square = GetSquare(spiralSize, 2) + 1;
             for (int row = 1; row < spiralSize; row++)
             {
-                if (++square == value)
+                if (square++ == value)
                     return (row, 0);
             }
+            throw new Exception("Uh oh!");
+        }
 
+        private static (int, int) IterateBottomSide(int value, int spiralSize)
+        {
+            int square = GetSquare(spiralSize, 1) + 1;
             for (int col = 1; col < spiralSize; col++)
             {
-                if (++square == value)
+                if (square++ == value)
                     return (spiralSize - 1, col);
             }
+            throw new Exception("Uh oh!");
+        }
 
-            // Move to next spiral ring
-            if (++square == value)
-                return (spiralSize, spiralSize + 1);
-
-            return IterateSpiral((spiralSize - 1, spiralSize + 1), value, spiralSize + 2, square);
+        private static int GetSquare(int spiralSize, int offset)
+        {
+            return spiralSize * spiralSize - offset * (spiralSize - 1);
         }
 
         private static int GetStepsTaken((int row, int col) pos, int size)

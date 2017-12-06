@@ -37,21 +37,26 @@ namespace Day06
         private int Iterate(int[] input)
         {
             int cycles = 0;
-            int[] distribution = input;
+            int[] configuration = input;
             while (true)
             {
-                (int value, int index) max = distribution.Select(ToTuple).Aggregate((0, 0), GetMax, x => x);
-                if (max.value == 0)
+                (int blocks, int index) bank = FindFirstBankWithMaxBlocks(configuration);
+                if (bank.blocks == 0)
                     return 0;
 
-                var repeatCycles = GetCyclesSinceRepeat(distribution, cycles);
+                var repeatCycles = GetCyclesSinceRepeat(configuration, cycles);
                 if (repeatCycles > 0)
                     return repeatCycles;
-                AddConfiguration(distribution, cycles);
+                AddConfiguration(configuration, cycles);
 
-                distribution = Redistribute((int[]) distribution.Clone(), max);
+                configuration = Redistribute((int[]) configuration.Clone(), bank);
                 cycles = cycles + 1;
             }
+        }
+
+        private static (int, int) FindFirstBankWithMaxBlocks(int[] configuration)
+        {
+            return configuration.Select(ToTuple).Aggregate((0, 0), GetMax, x => x);
         }
 
         // ReSharper disable UnusedTupleComponentInReturnValue
@@ -65,45 +70,51 @@ namespace Day06
             return x.value >= y.value ? x : y;
         }
 
-        private static int[] Redistribute(int[] distribution, (int blocks, int index) bank)
+        private static int[] Redistribute(int[] configuration, (int blocks, int index) bank)
         {
-            var totalBanks = distribution.Length;
+            var totalBanks = configuration.Length;
             var totalBlocks = bank.blocks;
 
             var index = bank.index;
-            distribution[index++] = 0;
+            configuration[index++] = 0;
             while (totalBlocks > 0)
             {
-                distribution[index++ % totalBanks]++;
+                configuration[index++ % totalBanks]++;
                 totalBlocks--;
             }
 
-            return distribution;
+            return configuration;
         }
 
-        private void AddConfiguration(int[] redistribution, int cycles)
+        private void AddConfiguration(int[] configuration, int cycles)
         {
-            int key = redistribution[0];
+            int key = configuration[0];
             if (_configurations.ContainsKey(key))
-                _configurations[key].Add((redistribution, cycles));
+                _configurations[key].Add((configuration, cycles));
             else
-                _configurations.Add(key, new List<(int[], int)> {(redistribution, cycles)});
+                _configurations.Add(key, new List<(int[], int)> {(configuration, cycles)});
         }
 
-        private int GetCyclesSinceRepeat(int[] redistribution, int cycles)
+        private int GetCyclesSinceRepeat(int[] distribution, int cycles)
         {
-            var key = redistribution[0];
+            var key = distribution[0];
             if (!_configurations.ContainsKey(key))
                 return 0;
-            var repeated = _configurations[key].FirstOrDefault(distribution => IsSameDistribution(redistribution, distribution.conf));
-            if (repeated.conf != null)
+            var repeated = GetRepeatedConfiguration(distribution);
+            if (repeated.configuration != null)
                 return cycles - repeated.cycle;
             return 0;
         }
 
-        private static bool IsSameDistribution(int[] redistribution, int[] distribution)
+        private (int[] configuration, int cycle) GetRepeatedConfiguration(int[] configuration)
         {
-            return distribution.Zip(redistribution, (x, y) => Math.Abs(x - y)).Sum() == 0;
+            var key = configuration[0];
+            return _configurations[key].FirstOrDefault(IsRepeatedDistribution(configuration));
+        }
+
+        private static Func<(int[] configuration, int cycle), bool> IsRepeatedDistribution(int[] configuration)
+        {
+            return other => configuration.Zip(other.configuration, (x, y) => Math.Abs(x - y)).Sum() == 0;
         }
 
         [Fact]
