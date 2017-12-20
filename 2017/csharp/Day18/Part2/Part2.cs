@@ -2,7 +2,6 @@
 
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,7 +17,7 @@ namespace Day18.Part2
         }
 
         [Fact]
-        public async Task Tests()
+        public void Tests()
         {
             string[] instructions =
             {
@@ -30,27 +29,22 @@ namespace Day18.Part2
                 "rcv c",
                 "rcv d",
             };
-            await TotalSendsOf(instructions, 3);
+            TotalSendsOf(instructions, 3);
         }
 
-        private static async Task TotalSendsOf(string[] input, int expected)
+        private static void TotalSendsOf(string[] input, long expected)
         {
-            Assert.Equal(expected, await Compute(input.Select(ParseInput).ToArray()));
+            Assert.Equal(expected, Compute(input.Select(ParseInput).ToArray()));
         }
 
-        private static async Task<long> Compute(Instruction[] input)
+        private static long Compute(Instruction[] instructions)
         {
             var program0 = new Program(0);
             var program1 = new Program(1);
 
-            program0.OtherProgram = program1;
-            program1.OtherProgram = program0;
+            var cpu = new Cpu(new[] {program0, program1});
+            cpu.Execute(instructions);
 
-            var task0 = Task.Run(() => program0.Execute(input));
-            var task1 = Task.Run(() => program1.Execute(input));
-
-            await Task.WhenAll(task0, task1);
-            
             return program1.SendCount;
         }
 
@@ -61,11 +55,10 @@ namespace Day18.Part2
         }
 
         [Fact]
-        public async Task Answer()
+        public void Answer()
         {
             Instruction[] input = File.ReadAllLines("./input1.txt").Select(ParseInput).ToArray();
-            var answer = await Compute(input);
-            _output.WriteLine($"Part1: {answer}");
+            _output.WriteLine($"Part2: {Compute(input)}");
         }
     }
 }

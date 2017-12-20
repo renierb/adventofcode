@@ -1,137 +1,121 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Day18.Part2
 {
     public class Cpu
     {
-        private static readonly Dictionary<string, Action<Program, string, string>> Actions = new Dictionary<string, Action<Program, string, string>>(7)
-        {
-            {"snd", Snd},
-            {"set", Set},
-            {"add", Add},
-            {"mul", Mul},
-            {"mod", Mod},
-            {"rcv", Rcv},
-            {"jgz", Jgz},
-        };
-
-        private int Index { get; set; }
-        private static readonly List<Queue<long>> Queues = new List<Queue<long>>(Enumerable.Repeat(new Queue<long>(), 2));
-        
-        public void Execute(Instruction[] instructions, Program[] programs)
-        {
-            var program = programs[Index];
-            while (program.Index >= 0 && program.Index < instructions.Length)
+        private static readonly Dictionary<string, Action<Cpu, string, string>> Actions =
+            new Dictionary<string, Action<Cpu, string, string>>(7)
             {
-                Execute(program, instructions[program.Index]);
+                {"snd", Snd},
+                {"set", Set},
+                {"add", Add},
+                {"mul", Mul},
+                {"mod", Mod},
+                {"rcv", Rcv},
+                {"jgz", Jgz},
+            };
+
+        public Cpu(Program[] programs)
+        {
+            Programs = programs;
+            Queues = new List<Queue<long>>(programs.Length);
+            Programs.ForEach((_, i) => Queues.Add(new Queue<long>()));
+        }
+
+        private int ProgramIndex { get; set; }
+        private Program[] Programs { get; }
+        private List<Queue<long>> Queues { get; }
+
+        private Program CurrentProgram => Programs?[ProgramIndex];
+
+        public void Execute(Instruction[] instructions)
+        {
+            while (Programs.Any(program => program.InstructionIndex >= 0 && program.InstructionIndex < instructions.Length))
+            {
+                Execute(instructions[CurrentProgram.InstructionIndex++]);
             }
         }
 
-        private static void Execute(Program program, Instruction instr)
+        private void Execute(Instruction instr)
         {
-            Actions[instr.Action](program, instr.Register, instr.Value);
+            Actions[instr.Action](this, instr.Register, instr.Value);
         }
 
-        private static void Snd(Program program, string registerX, string value)
+        private void SendMessage(long value)
         {
-            var x = program.GetRegisterValue(registerX);
-            Queues[(program.ProgramId + 1) % Queues.Count].Enqueue(x);
-            program.SendCount++;
-            program.Index++;
+            var programId = (CurrentProgram.ProgramId + 1) % Programs.Length;
+            Queues[programId].Enqueue(value);
+            CurrentProgram.SendCount++;
         }
 
-        private static void Set(Program program, string register, string value)
+        private static void Snd(Cpu cpu, string valueX, string _)
         {
-            program.SetRegisterValue(register, program.GetValue(value));
-            program.Index++;
+            var x = cpu.CurrentProgram.GetValue(valueX);
+            cpu.SendMessage(x);
         }
 
-        private static void Add(Program program, string registerX, string valueY)
+        private static void Set(Cpu cpu, string registerX, string valueY)
         {
-            var x = program.GetRegisterValue(registerX);
-            var y = program.GetValue(valueY);
+            var y = cpu.CurrentProgram.GetValue(valueY);
+            cpu.CurrentProgram.SetRegisterValue(registerX, y);
+        }
+
+        private static void Add(Cpu cpu, string registerX, string valueY)
+        {
+            var x = cpu.CurrentProgram.GetRegisterValue(registerX);
+            var y = cpu.CurrentProgram.GetValue(valueY);
             checked
             {
-                program.SetRegisterValue(registerX, x + y);
+                cpu.CurrentProgram.SetRegisterValue(registerX, x + y);
             }
-            program.Index++;
         }
 
-        private static void Mul(Program program, string registerX, string valueY)
+        private static void Mul(Cpu cpu, string registerX, string valueY)
         {
-            var x = program.GetRegisterValue(registerX);
-            var y = program.GetValue(valueY);
+            var x = cpu.CurrentProgram.GetRegisterValue(registerX);
+            var y = cpu.CurrentProgram.GetValue(valueY);
             checked
             {
-                program.SetRegisterValue(registerX, x * y);
+                cpu.CurrentProgram.SetRegisterValue(registerX, x * y);
             }
-            program.Index++;
         }
 
-        private static void Mod(Program program, string registerX, string valueY)
+        private static void Mod(Cpu cpu, string registerX, string valueY)
         {
-            var x = program.GetRegisterValue(registerX);
-            var y = program.GetValue(valueY);
-            program.SetRegisterValue(registerX, Math.Abs(x % y));
-            program.Index++;
+            var x = cpu.CurrentProgram.GetRegisterValue(registerX);
+            var y = cpu.CurrentProgram.GetValue(valueY);
+            cpu.CurrentProgram.SetRegisterValue(registerX, Math.Abs(x % y));
         }
 
-        private static void Rcv(Program program, string registerX, string valueY = null)
+        private static void Rcv(Cpu cpu, string registerX, string valueY = null)
         {
-            do
+            if (cpu.Queues[cpu.CurrentProgram.ProgramId].TryDequeue(out var value))
             {
-                if (program.MessageQueue.TryDequeue(out var value))
-                {
-                    program.SetRegisterValue(registerX, value);
-                    program.Index++;
-                    return;
-                }
+                cpu.CurrentProgram.SetRegisterValue(registerX, value);
+                return;
+            }
 
-                program.OtherProgram.Signal.Set();
-                if (program.MessageQueue.IsEmpty && program.OtherProgram.MessageQueue.IsEmpty)
-                {
-                    program.Index = -1;
-                    return;
-                }
+            if (cpu.Queues.All(_ => _.IsEmpty()))
+            {
+                cpu.CurrentProgram.InstructionIndex = -1;
+            }
 
-                program.Signal.WaitOne();
-            } while (true);
+            SwitchProgram(cpu);
         }
 
-        private static void Jgz(Program program, string registerX, string valueY)
+        private static void SwitchProgram(Cpu cpu)
         {
-            var x = program.GetRegisterValue(registerX);
+            cpu.ProgramIndex = (cpu.ProgramIndex + 1) % cpu.Programs.Length;
+        }
+
+        private static void Jgz(Cpu cpu, string registerX, string valueY)
+        {
+            var x = cpu.CurrentProgram.GetRegisterValue(registerX);
             if (x > 0)
-                program.Index += program.GetValue(valueY);
-            else
-                program.Index++;
-        }
-
-        private long GetValue(string value)
-        {
-            return long.TryParse(value, out var result) ? result : GetRegisterValue(value);
-        }
-
-        private long GetRegisterValue(string name)
-        {
-            if (!Registers.TryGetValue(name, out var value))
-                Registers.Add(name, 0);
-            return value;
-        }
-
-        private void SetRegisterValue(string name, long value)
-        {
-            Registers[name] = value;
-        }
-
-        private void Send(long value)
-        {
-            MessageQueue.Enqueue(value);
+                cpu.CurrentProgram.InstructionIndex += cpu.CurrentProgram.GetValue(valueY) - 1;
         }
     }
 }

@@ -29,16 +29,18 @@ namespace Day19
         [Fact]
         public void Tests()
         {
-            string input = @"
-       |          
-       |  +--+    
-       A  |  C    
-   F---|----E|--+ 
-       |  |  |  D 
-       +B-+  +--+ 
-                  ";
+            string[] input =
+            {
+                "     |          ",
+                "     |  +--+    ",
+                "     A  |  C    ",
+                " F---|----E|--+ ",
+                "     |  |  |  D ",
+                "     +B-+  +--+ ",
+                "                ",
+            };
 
-            LettersCapturedOf(input.Split("\r\n").Skip(1).ToArray(), "ABCDEF");
+            LettersCapturedOf(input, "ABCDEF");
         }
 
         private static void LettersCapturedOf(string[] input, string expected)
@@ -173,8 +175,7 @@ namespace Day19
         public void Answer()
         {
             string[] input = File.ReadAllLines("./input1.txt");
-            var answer = Compute(input);
-            _output.WriteLine($"Part1: {answer}");
+            _output.WriteLine($"Part1: {Compute(input)}");
         }
     }
 }
