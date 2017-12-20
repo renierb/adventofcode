@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace Day18.Part2
 {
@@ -21,13 +22,13 @@ namespace Day18.Part2
         public Cpu(Program[] programs)
         {
             Programs = programs;
-            Queues = new List<Queue<long>>(programs.Length);
-            Programs.ForEach((_, i) => Queues.Add(new Queue<long>()));
+            Queues = new List<Queue<BigInteger>>(programs.Length);
+            Programs.ForEach((_, i) => Queues.Add(new Queue<BigInteger>()));
         }
 
         private int ProgramIndex { get; set; }
         private Program[] Programs { get; }
-        private List<Queue<long>> Queues { get; }
+        private List<Queue<BigInteger>> Queues { get; }
 
         private Program CurrentProgram => Programs?[ProgramIndex];
 
@@ -44,7 +45,7 @@ namespace Day18.Part2
             Actions[instr.Action](this, instr.Register, instr.Value);
         }
 
-        private void SendMessage(long value)
+        private void SendMessage(BigInteger value)
         {
             var programId = (CurrentProgram.ProgramId + 1) % Programs.Length;
             Queues[programId].Enqueue(value);
@@ -67,27 +68,21 @@ namespace Day18.Part2
         {
             var x = cpu.CurrentProgram.GetRegisterValue(registerX);
             var y = cpu.CurrentProgram.GetValue(valueY);
-            checked
-            {
-                cpu.CurrentProgram.SetRegisterValue(registerX, x + y);
-            }
+            cpu.CurrentProgram.SetRegisterValue(registerX, x + y);
         }
 
         private static void Mul(Cpu cpu, string registerX, string valueY)
         {
             var x = cpu.CurrentProgram.GetRegisterValue(registerX);
             var y = cpu.CurrentProgram.GetValue(valueY);
-            checked
-            {
-                cpu.CurrentProgram.SetRegisterValue(registerX, x * y);
-            }
+            cpu.CurrentProgram.SetRegisterValue(registerX, x * y);
         }
 
         private static void Mod(Cpu cpu, string registerX, string valueY)
         {
             var x = cpu.CurrentProgram.GetRegisterValue(registerX);
             var y = cpu.CurrentProgram.GetValue(valueY);
-            cpu.CurrentProgram.SetRegisterValue(registerX, Math.Abs(x % y));
+            cpu.CurrentProgram.SetRegisterValue(registerX, x % y);
         }
 
         private static void Rcv(Cpu cpu, string registerX, string valueY = null)
@@ -98,6 +93,7 @@ namespace Day18.Part2
                 return;
             }
 
+            cpu.CurrentProgram.InstructionIndex--;
             if (cpu.Queues.All(_ => _.IsEmpty()))
             {
                 cpu.CurrentProgram.InstructionIndex = -1;
@@ -113,9 +109,9 @@ namespace Day18.Part2
 
         private static void Jgz(Cpu cpu, string registerX, string valueY)
         {
-            var x = cpu.CurrentProgram.GetRegisterValue(registerX);
+            var x = cpu.CurrentProgram.GetValue(registerX);
             if (x > 0)
-                cpu.CurrentProgram.InstructionIndex += cpu.CurrentProgram.GetValue(valueY) - 1;
+                cpu.CurrentProgram.InstructionIndex += (long) cpu.CurrentProgram.GetValue(valueY) - 1L;
         }
     }
 }

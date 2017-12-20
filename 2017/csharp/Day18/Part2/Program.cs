@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 
 namespace Day18.Part2
 {
     public class Program
     {
-        private Dictionary<string, long> Registers { get; } = new Dictionary<string, long>();
+        private Dictionary<string, BigInteger> Registers { get; } = new Dictionary<string, BigInteger>();
 
         public Program(int programId)
         {
@@ -16,21 +17,21 @@ namespace Day18.Part2
         public long InstructionIndex { get; set; }
         public long SendCount { get; set; }
 
-        public long GetRegisterValue(string name)
+        public BigInteger GetRegisterValue(string name)
         {
             if (!Registers.TryGetValue(name, out var value))
                 Registers.Add(name, 0);
             return value;
         }
 
-        public void SetRegisterValue(string name, long value)
+        public void SetRegisterValue(string name, BigInteger value)
         {
             Registers[name] = value;
         }
 
-        public long GetValue(string value)
+        public BigInteger GetValue(string value)
         {
-            return long.TryParse(value, out var result) ? result : GetRegisterValue(value);
+            return BigInteger.TryParse(value, out var result) ? result : GetRegisterValue(value);
         }
     }
 }

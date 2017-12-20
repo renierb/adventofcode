@@ -21,13 +21,27 @@ namespace Day18.Part2
         {
             string[] instructions =
             {
-                "snd 1",
-                "snd 2",
-                "snd p",
-                "rcv a",
-                "rcv b",
-                "rcv c",
-                "rcv d",
+                "snd 1", "snd 2", "snd p", "rcv a", "rcv b", "rcv c", "rcv d", "jgz a -2"
+            };
+            TotalSendsOf(instructions, 3);
+            instructions = new[]
+            {
+                "snd 1", "rcv a", "snd 2", "rcv b", "snd p", "rcv c", "rcv d", "jgz a -2"
+            };
+            TotalSendsOf(instructions, 3);
+            instructions = new[]
+            {
+                "snd 1", "rcv a", "snd 2", "rcv b", "snd p", "rcv c", "jgz a -1"
+            };
+            TotalSendsOf(instructions, 3);
+            instructions = new[]
+            {
+                "snd 1", "rcv a", "snd 2", "jgz a 3", "rcv b", "snd p", "rcv c", "jgz a -1"
+            };
+            TotalSendsOf(instructions, 2);
+            instructions = new[]
+            {
+                "snd 1", "rcv a", "snd 2", "jgz a 4", "jgz a 1", "rcv b", "jgz a 4", "snd p", "rcv c", "jgz a -5", "rcv d"
             };
             TotalSendsOf(instructions, 3);
         }
