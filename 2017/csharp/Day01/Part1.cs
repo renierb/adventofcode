@@ -1,3 +1,5 @@
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 using System;
 using System.IO;
 using System.Linq;
@@ -22,32 +24,42 @@ namespace Day01
             InverseCaptchaOf("91212129", 9);
         }
 
-        [Fact]
-        public void Answer()
-        {
-            string input = File.ReadAllText("./input1.txt");
-            Console.WriteLine($"Part1: {ComputeInverse(input)}");
-        }
-
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private void InverseCaptchaOf(string input, int expected)
+        private static void InverseCaptchaOf(string input, int expected)
         {
             Assert.Equal(expected, ComputeInverse(input));
         }
 
         private static int ComputeInverse(string input)
         {
-            var numbers = input.Select(c => int.Parse(c.ToString())).ToArray();
-            
+            var numbers = input.Select(ParseInt).ToArray();
+
             int sum = 0;
             for (var i = 0; i < numbers.Length; i++)
             {
-                if (i == numbers.Length - 1 && numbers[0] == numbers[i])
+                if (IsLastIndex(numbers, i) && numbers[0] == numbers[i])
                     sum += numbers[0];
                 if (i > 0 && numbers[i] == numbers[i - 1])
                     sum += numbers[i];
             }
+
             return sum;
+        }
+
+        private static bool IsLastIndex(int[] numbers, int i)
+        {
+            return i == numbers.Length - 1;
+        }
+
+        private static int ParseInt(char c)
+        {
+            return int.Parse(c.ToString());
+        }
+
+        [Fact]
+        public void Answer()
+        {
+            string input = File.ReadAllText("./input1.txt");
+            Console.WriteLine($"Part1: {ComputeInverse(input)}");
         }
     }
 }

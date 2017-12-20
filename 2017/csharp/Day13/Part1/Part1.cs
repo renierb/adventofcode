@@ -1,4 +1,5 @@
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+// ReSharper disable AccessToModifiedClosure
 
 using System.Collections.Generic;
 using System.IO;
@@ -20,7 +21,7 @@ namespace Day13.Part1
         [Fact]
         public void Tests()
         {
-            string[] input = new[]
+            string[] input =
             {
                 "0: 3",
                 "1: 2",
@@ -37,8 +38,9 @@ namespace Day13.Part1
 
         private static int Compute(List<Scanner> initial)
         {
-            int travelDepth = 0;
             var maxDepth = initial.Max(_ => _.Depth);
+
+            int travelDepth = 0;
             var generator = EnumerableEx.Generate(initial, state => travelDepth <= maxDepth, MoveScanners, _ => _);
 
             int severity = 0;
@@ -46,10 +48,16 @@ namespace Day13.Part1
             {
                 var index = scanners.FindIndex(scanner => scanner.Depth == travelDepth && scanner.Position == 0);
                 if (index >= 0)
-                    severity += initial[index].Depth * initial[index].Range;
+                    severity += GetSeverity(scanners[index]);
                 travelDepth++;
             }
+
             return severity;
+        }
+
+        private static int GetSeverity(Scanner scanner)
+        {
+            return scanner.Depth * scanner.Range;
         }
 
         private static List<Scanner> MoveScanners(List<Scanner> scanners)
@@ -60,15 +68,15 @@ namespace Day13.Part1
 
         private static List<Scanner> ParseInput(IEnumerable<string> lines)
         {
-            return lines.Select(line => line.Split(": ").Select(int.Parse).ToArray()).Aggregate(new List<Scanner>(), BuildFirewall);
+            return lines.Select(line => line.Split(": ").Select(int.Parse).ToArray()).Aggregate(new List<Scanner>(), AddScanner);
         }
 
-        private static List<Scanner> BuildFirewall(List<Scanner> firewall, int[] scanner)
+        private static List<Scanner> AddScanner(List<Scanner> scanners, int[] scanner)
         {
             int depth = scanner[0];
             int range = scanner[1];
-            firewall.Add(new Scanner(depth, range));
-            return firewall;
+            scanners.Add(new Scanner(depth, range));
+            return scanners;
         }
 
         [Fact]

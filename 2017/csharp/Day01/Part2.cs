@@ -1,3 +1,5 @@
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 using System;
 using System.IO;
 using System.Linq;
@@ -20,15 +22,7 @@ namespace Day01
             InverseCaptchaOf("12131415", 4);
         }
 
-        [Fact]
-        public void Answer()
-        {
-            string input = File.ReadAllText("./input2.txt");
-            Console.WriteLine($"Part2: {ComputeInverse(input)}");
-        }
-
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private void InverseCaptchaOf(string input, int expected)
+        private static void InverseCaptchaOf(string input, int expected)
         {
             Assert.Equal(expected, ComputeInverse(input));
         }
@@ -38,7 +32,14 @@ namespace Day01
             var numbers = input.Select(c => int.Parse(c.ToString())).ToArray();
 
             int steps = numbers.Length / 2;
-            return numbers.Where((n, i) => numbers[i] == numbers[(i + steps) % numbers.Length ]).Sum();
+            return numbers.Where((n, i) => numbers[i] == numbers[(i + steps) % numbers.Length]).Sum();
+        }
+
+        [Fact]
+        public void Answer()
+        {
+            string input = File.ReadAllText("./input2.txt");
+            Console.WriteLine($"Part2: {ComputeInverse(input)}");
         }
     }
 }

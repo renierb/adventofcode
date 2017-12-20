@@ -1,3 +1,5 @@
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,14 +27,6 @@ namespace Day02
             ChecksumOf("5 9 2 8\n9 4 7 3\n3 8 6 5", 9);
         }
 
-        [Fact]
-        public void Answer()
-        {
-            string input = File.ReadAllText("./input2.txt");
-            _output.WriteLine($"Part2: {Compute(input)}");
-        }
-
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void ChecksumOf(string input, int expected)
         {
             Assert.Equal(expected, Compute(input));
@@ -64,6 +58,13 @@ namespace Day02
                 var denominator = numbers.Skip(index + 1).FirstOrDefault(cur => n % cur == 0);
                 return denominator > 0 ? n / denominator : 0;
             };
+        }
+
+        [Fact]
+        public void Answer()
+        {
+            string input = File.ReadAllText("./input2.txt");
+            _output.WriteLine($"Part2: {Compute(input)}");
         }
     }
 }
