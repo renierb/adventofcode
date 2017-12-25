@@ -24,7 +24,7 @@ namespace Day24
             StrongestBridgeOf(new[] {"0/2", "2/2", "2/3", "3/4", "3/5", "0/1", "10/1", "9/10"}, 19);
         }
 
-        private void StrongestBridgeOf(string[] input, int expected)
+        private static void StrongestBridgeOf(string[] input, int expected)
         {
             Assert.Equal(expected, Compute(input.Select(ParseLine).ToArray()));
         }
@@ -40,11 +40,12 @@ namespace Day24
             if (rootComponents != null)
             {
                 var start = rootComponents.Select(c => new BridgeNode(0, c));
+
                 var explorer = start.Expand(node =>
                 {
                     var otherPort = node.Component.OtherPort(node.Port);
-                    var nextComponents = GetNextComponents(node, lookup[otherPort]);
-                    return nextComponents.Select(GetBridgeNode(node, otherPort)).Where(NotNull);
+                    var picked = PickComponents(node, lookup[otherPort]);
+                    return picked.Select(GetBridgeNode(node, otherPort)).Where(NotNull);
                 });
 
                 var longest = explorer.MaxBy(node => node.Length);
@@ -54,14 +55,9 @@ namespace Day24
             return 0L;
         }
 
-        private static IEnumerable<Component> GetNextComponents(BridgeNode parent, IEnumerable<Component> components)
+        private static IEnumerable<Component> PickComponents(BridgeNode parent, IEnumerable<Component> components)
         {
             return components.Where(c => c.Id != parent.Component.Id);
-        }
-
-        private static bool NotNull(BridgeNode l)
-        {
-            return l != null;
         }
 
         private static Func<Component, BridgeNode> GetBridgeNode(BridgeNode parent, int port)
@@ -83,6 +79,11 @@ namespace Day24
                 parent = parent.Parent;
             }
             return false;
+        }
+
+        private static bool NotNull(BridgeNode l)
+        {
+            return l != null;
         }
 
         private static Dictionary<int, List<Component>> GetLookupDictionary(Component[] components)

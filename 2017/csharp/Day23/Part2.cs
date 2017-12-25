@@ -1,5 +1,7 @@
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
+using System.IO;
+using System.Linq;
 using System.Numerics;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,11 +42,16 @@ namespace Day23
                 var f = 1;
                 for (var d = 2; d <= (b / 2); d++)
                 {
-                    for (var e = 2; e <= (b / (d - 1)); e++)
+                    for (var e = 2; e <= (b / d); e++)
                     {
                         if (d * e == b)
+                        {
                             f = 0;
+                            break;
+                        }
                     }
+                    if (f == 0)
+                        break;
                 }
                 if (f == 0)
                     h++;
@@ -60,10 +67,15 @@ namespace Day23
         }
 
         [Fact]
+        public void DebugTest()
+        {
+            Instruction[] input = File.ReadAllLines("./input2.txt").Select(ParseInput).ToArray();
+            _output.WriteLine($"Part2: {Compute(input)}");
+        }
+
+        [Fact]
         public void Answer()
         {
-            // Instruction[] input = File.ReadAllLines("./input2.txt").Select(ParseInput).ToArray();
-            // var answer = Compute(input);
             _output.WriteLine($"Part2: {Compute()}");
         }
     }
