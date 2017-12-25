@@ -43,54 +43,45 @@ namespace Day22
 
         private static void BurstsCausingInfectionOf(string[] input, int bursts, int expected)
         {
-            var grid = input.Select(row => row.ToCharArray().ToList()).ToList();
+            var grid = input.Select(row => row.ToCharArray()).ToArray();
             Assert.Equal(expected, Compute(grid, bursts));
         }
 
-        private static int Compute(List<List<char>> grid, int bursts)
+        private static int Compute(char[][] grid, int bursts)
         {
-            var preInfected = grid.SelectMany(GetInfectedNodes).ToHashSet();
-            var postInfected = new HashSet<(int r, int c)>();
+            HashSet<(int r, int c)> infectedNodes = grid.SelectMany(GetInfectedNodes).ToHashSet();
 
             int infected = 0;
+            int gridSize = grid.Length;
 
             Direction direction = Direction.Up;
-            var mid = grid.Count / 2;
+            var mid = gridSize / 2;
             (int r, int c) node = (mid, mid);
             for (int i = 0; i < bursts; i++)
             {
-                if (IsInfected(grid, node))
+                if (IsInfected(infectedNodes, node))
                 {
                     direction = TurnRight(direction);
-                    grid[node.r][node.c] = '.';
-                    preInfected.Remove(node);
-                    postInfected.Remove(node);
+                    infectedNodes.Remove(node);
                 }
                 else
                 {
                     direction = TurnLeft(direction);
-                    grid[node.r][node.c] = '#';
-                    if (!preInfected.Contains(node))
-                        infected += postInfected.Add(node) ? 1 : 0;
+                    if (!infectedNodes.Contains(node))
+                        infected += infectedNodes.Add(node) ? 1 : 0;
                 }
                 node = MoveForward(node, direction);
-                if (!IsLegalPosition(grid, node))
+                if (!IsLegalPosition(node, gridSize))
                 {
+                    gridSize += 2;
                     node = NormalizePosition(node);
-                    grid = IncreaseGrid(grid, grid.Count + 2);
-                    preInfected = NormalizeNodes(preInfected);
-                    postInfected = NormalizeNodes(postInfected);
+                    infectedNodes = NormalizeNodes(infectedNodes);
                 }
             }
             return infected;
         }
 
-        private static HashSet<(int, int)> NormalizeNodes(IEnumerable<(int r, int c)> nodes)
-        {
-            return nodes.Select(n => (n.r + 1, n.c + 1)).ToHashSet();
-        }
-
-        private static IEnumerable<(int r, int c)> GetInfectedNodes(List<char> nodes, int r)
+        private static IEnumerable<(int r, int c)> GetInfectedNodes(char[] nodes, int r)
         {
             return nodes.Select(GetInfectedNode(r)).Where(NotNull).OfType<(int, int)>();
         }
@@ -98,6 +89,11 @@ namespace Day22
         private static Func<char, int, (int, int)?> GetInfectedNode(int r)
         {
             return (node, c) => node == '#' ? (r, c) : ((int, int)?) null;
+        }
+
+        private static HashSet<(int, int)> NormalizeNodes(IEnumerable<(int r, int c)> nodes)
+        {
+            return nodes.Select(n => (n.r + 1, n.c + 1)).ToHashSet();
         }
 
         private static bool NotNull((int, int)? value)
@@ -127,22 +123,9 @@ namespace Day22
             return (node.r + 1, node.c + 1);
         }
 
-        private static List<List<char>> IncreaseGrid(List<List<char>> grid, int count)
+        private static bool IsLegalPosition((int r, int c) node, int gridSize)
         {
-            return grid.Select(AddColumns)
-                .Prepend(new List<char>(Enumerable.Repeat('.', count)))
-                .Append(new List<char>(Enumerable.Repeat('.', count)))
-                .ToList();
-        }
-
-        private static bool IsLegalPosition(List<List<char>> grid, (int r, int c) node)
-        {
-            return node.r >= 0 && node.c >= 0 && node.r < grid.Count && node.c < grid.Count;
-        }
-
-        private static List<char> AddColumns(List<char> row)
-        {
-            return row.Prepend('.').Append('.').ToList();
+            return node.r >= 0 && node.c >= 0 && node.r < gridSize && node.c < gridSize;
         }
 
         private static Direction TurnLeft(Direction current)
@@ -179,16 +162,16 @@ namespace Day22
             }
         }
 
-        private static bool IsInfected(List<List<char>> grid, (int r, int c) node)
+        private static bool IsInfected(HashSet<(int r, int c)> infectedNodes, (int r, int c) node)
         {
-            return grid[node.r][node.c] == '#';
+            return infectedNodes.Contains(node);
         }
 
         [Fact]
         public void Answer()
         {
             string[] input = File.ReadAllLines("./input1.txt");
-            var grid = input.Select(row => row.ToCharArray().ToList()).ToList();
+            var grid = input.Select(row => row.ToCharArray()).ToArray();
             _output.WriteLine($"Part1: {Compute(grid, 10000)}");
         }
     }

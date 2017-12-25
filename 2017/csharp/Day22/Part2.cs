@@ -42,96 +42,54 @@ namespace Day22
 
         private static void BurstsCausingInfectionOf(string[] input, int bursts, int expected)
         {
-            var grid = input.Select(row => row.ToCharArray().ToList()).ToList();
+            var grid = input.Select(row => row.ToCharArray()).ToArray();
             Assert.Equal(expected, Compute(grid, bursts));
         }
 
-        private static int Compute(List<List<char>> grid, int bursts)
+        private static int Compute(char[][] grid, int bursts)
         {
-            var preInfected = grid.SelectMany(GetInfectedNodes).ToHashSet();
-            var postInfected = new HashSet<(int r, int c)>();
+            IDictionary<(int r, int c), char> nodes = grid.SelectMany(GetInfectedNodes).ToDictionary(_ => _, _ => '#');
 
             int infected = 0;
+            int gridSize = grid.Length;
 
             Direction direction = Direction.Up;
-            var mid = grid.Count / 2;
+            var mid = gridSize / 2;
             (int r, int c) node = (mid, mid);
             for (int i = 0; i < bursts; i++)
             {
-                if (IsClean(grid, node))
+                if (IsClean(nodes, node))
                 {
                     direction = TurnLeft(direction);
-                    grid[node.r][node.c] = 'W';
-                    
+                    nodes[node] = 'W';
                 }
-                else if (IsWeakened(grid, node))
+                else if (IsWeakened(nodes, node))
                 {
-                    grid[node.r][node.c] = '#';
-                    if (!preInfected.Contains(node))
-                        infected += postInfected.Add(node) ? 1 : 0;
+                    nodes[node] = '#';
+                    infected++;
                 }
-                else if (IsInfected(grid, node))
+                else if (IsInfected(nodes, node))
                 {
                     direction = TurnRight(direction);
-                    grid[node.r][node.c] = 'F';
+                    nodes[node] = 'F';
                 }
-                else if (IsFlagged(grid, node))
+                else if (IsFlagged(nodes, node))
                 {
                     direction = ReverseDirection(direction);
-                    grid[node.r][node.c] = '.';
-                    preInfected.Remove(node);
-                    postInfected.Remove(node);
+                    nodes.Remove(node);
                 }
                 node = MoveForward(node, direction);
-                if (!IsLegalPosition(grid, node))
+                if (!IsLegalPosition(node, gridSize))
                 {
+                    gridSize += 2;
                     node = NormalizePosition(node);
-                    grid = IncreaseGrid(grid, grid.Count + 2);
-                    preInfected = NormalizeNodes(preInfected);
-                    postInfected = NormalizeNodes(postInfected);
+                    nodes = NormalizeNodes(nodes);
                 }
             }
             return infected;
         }
 
-        private static Direction ReverseDirection(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.Up:
-                    return Direction.Down;
-                case Direction.Down:
-                    return Direction.Up;
-                case Direction.Left:
-                    return Direction.Right;
-                case Direction.Right:
-                    return Direction.Left;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction));
-            }
-        }
-
-        private static bool IsFlagged(List<List<char>> grid, (int r, int c) node)
-        {
-            return grid[node.r][node.c] == 'F';
-        }
-
-        private static bool IsWeakened(List<List<char>> grid, (int r, int c) node)
-        {
-            return grid[node.r][node.c] == 'W';
-        }
-
-        private static bool IsClean(List<List<char>> grid, (int r, int c) node)
-        {
-            return grid[node.r][node.c] == '.';
-        }
-
-        private static HashSet<(int, int)> NormalizeNodes(IEnumerable<(int r, int c)> nodes)
-        {
-            return nodes.Select(n => (n.r + 1, n.c + 1)).ToHashSet();
-        }
-
-        private static IEnumerable<(int r, int c)> GetInfectedNodes(List<char> nodes, int r)
+        private static IEnumerable<(int r, int c)> GetInfectedNodes(char[] nodes, int r)
         {
             return nodes.Select(GetInfectedNode(r)).Where(NotNull).OfType<(int, int)>();
         }
@@ -144,6 +102,41 @@ namespace Day22
         private static bool NotNull((int, int)? value)
         {
             return value != null;
+        }
+
+        private static bool IsClean(IDictionary<(int r, int c), char> nodes, (int r, int c) node)
+        {
+            return !nodes.ContainsKey(node);
+        }
+
+        private static bool IsWeakened(IDictionary<(int r, int c), char> nodes, (int r, int c) node)
+        {
+            return nodes.TryGetValue(node, out var value) && value == 'W';
+        }
+
+        private static bool IsInfected(IDictionary<(int r, int c), char> nodes, (int r, int c) node)
+        {
+            return nodes.TryGetValue(node, out var value) && value == '#';
+        }
+
+        private static bool IsFlagged(IDictionary<(int r, int c), char> nodes, (int r, int c) node)
+        {
+            return nodes.TryGetValue(node, out var value) && value == 'F';
+        }
+
+        private static bool IsLegalPosition((int r, int c) node, int gridSize)
+        {
+            return node.r >= 0 && node.c >= 0 && node.r < gridSize && node.c < gridSize;
+        }
+
+        private static (int r, int c) NormalizePosition((int r, int c) node)
+        {
+            return (node.r + 1, node.c + 1);
+        }
+
+        private static IDictionary<(int r, int c), char> NormalizeNodes(IDictionary<(int r, int c), char> nodes)
+        {
+            return nodes.ToDictionary(pair => (pair.Key.r + 1, pair.Key.c + 1), pair => pair.Value);
         }
 
         private static (int r, int c) MoveForward((int r, int c) node, Direction direction)
@@ -161,29 +154,6 @@ namespace Day22
                 default:
                     throw new ArgumentOutOfRangeException(nameof(direction));
             }
-        }
-
-        private static (int r, int c) NormalizePosition((int r, int c) node)
-        {
-            return (node.r + 1, node.c + 1);
-        }
-
-        private static List<List<char>> IncreaseGrid(List<List<char>> grid, int count)
-        {
-            return grid.Select(AddColumns)
-                .Prepend(new List<char>(Enumerable.Repeat('.', count)))
-                .Append(new List<char>(Enumerable.Repeat('.', count)))
-                .ToList();
-        }
-
-        private static bool IsLegalPosition(List<List<char>> grid, (int r, int c) node)
-        {
-            return node.r >= 0 && node.c >= 0 && node.r < grid.Count && node.c < grid.Count;
-        }
-
-        private static List<char> AddColumns(List<char> row)
-        {
-            return row.Prepend('.').Append('.').ToList();
         }
 
         private static Direction TurnLeft(Direction current)
@@ -220,16 +190,28 @@ namespace Day22
             }
         }
 
-        private static bool IsInfected(List<List<char>> grid, (int r, int c) node)
+        private static Direction ReverseDirection(Direction direction)
         {
-            return grid[node.r][node.c] == '#';
+            switch (direction)
+            {
+                case Direction.Up:
+                    return Direction.Down;
+                case Direction.Down:
+                    return Direction.Up;
+                case Direction.Left:
+                    return Direction.Right;
+                case Direction.Right:
+                    return Direction.Left;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction));
+            }
         }
 
         [Fact]
         public void Answer()
         {
             string[] input = File.ReadAllLines("./input1.txt");
-            var grid = input.Select(row => row.ToCharArray().ToList()).ToList();
+            var grid = input.Select(row => row.ToCharArray()).ToArray();
             _output.WriteLine($"Part1: {Compute(grid, 10000000)}");
         }
     }
