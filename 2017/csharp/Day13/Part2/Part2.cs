@@ -37,38 +37,18 @@ namespace Day13.Part2
             Assert.Equal(expected, Compute(ParseInput(input)));
         }
 
-        private static int Compute(List<Scanner> initialScanners)
+        private static int Compute(List<Scanner> scanners)
         {
-            var initial = initialScanners.ToDictionary(_ => _.Depth, _ => _);
-
-            int delay = 0;
-            while (IsCaught(initial, delay))
-                delay++;
-            return delay;
+            return EnumerableEx.Generate(0, i => MoreDelay(scanners, i), i => i + 1, i => i + 1).Last();
         }
 
-        private static bool IsCaught(Dictionary<int, Scanner> initial, int delay)
+        private static bool MoreDelay(List<Scanner> scanners, int delay)
         {
-            int travelDepth = 0;
-            var maxDepth = initial.Keys.Max();
-
-            var generator = EnumerableEx.Generate(initial, _ => true, MoveScanners, _ => _);
-            foreach (var scanners in generator.Skip(delay))
+            return scanners.Any(scanner =>
             {
-                if (scanners.TryGetValue(travelDepth, out var scanner) && scanner.Position == 0)
-                    break;
-                travelDepth++;
-                if (travelDepth > maxDepth)
-                    return false;
-            }
-            initial.Values.ForEach(scanner => scanner.Reset());
-            return true;
-        }
-
-        private static Dictionary<int, Scanner> MoveScanners(Dictionary<int, Scanner> scanners)
-        {
-            scanners.Values.ForEach(scanner => scanner.Move());
-            return scanners;
+                var repeat = (scanner.Range - 1) * 2;
+                return (delay + scanner.Depth) % repeat == 0;
+            });
         }
 
         private static List<Scanner> ParseInput(IEnumerable<string> lines)
@@ -86,7 +66,8 @@ namespace Day13.Part2
         public void Answer()
         {
             string[] input = File.ReadAllLines("./input1.txt");
-            _output.WriteLine($"Part2: {Compute(ParseInput(input))}");
+            var answer = Compute(ParseInput(input));
+            _output.WriteLine($"Part2: {answer}");
         }
     }
 }

@@ -1,3 +1,5 @@
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 using System;
 using System.IO;
 using Xunit;
@@ -29,7 +31,6 @@ namespace Day03
             BottomRightOf(25, isSquare: 25);
         }
 
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void BottomRightOf(int fromSquare, int isSquare)
         {
             Assert.Equal(isSquare, GetBottomRightSquare(fromSquare));
@@ -71,7 +72,6 @@ namespace Day03
             FromSquareSteps(1024, steps: 31);
         }
 
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void FromSquareSteps(int fromSquare, int steps)
         {
             Assert.Equal(steps, GetStepsTaken(fromSquare));

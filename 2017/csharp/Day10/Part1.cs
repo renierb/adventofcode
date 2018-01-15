@@ -1,3 +1,5 @@
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
+
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -37,6 +39,7 @@ namespace Day10
                 index = (index + length + skip) % hashed.Length;
                 skip = skip + 1;
             }
+
             return hashed[0] * hashed[1];
         }
 
